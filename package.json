@@ -2,13 +2,15 @@
   "name": "worship-slides-desktop-app",
   "version": "1.0.0",
   "description": "찬양 가사 슬라이드 앱",
-  "main": "electron/main.js",
+  "main": "./out/main/index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "electron": "wait-on tcp:5173 && electron .",
-    "electron:dev": "concurrently -k \"pnpm dev\" \"pnpm electron\"",
-    "electron:build": "pnpm build && electron-builder"
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "postinstall": "electron-builder install-app-deps",
+    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:win": "electron-vite build && electron-builder --win",
+    "build:linux": "electron-vite build && electron-builder --linux"
   },
   "keywords": [
     "worship",
@@ -18,21 +20,30 @@
   "author": "Je-chan",
   "license": "ISC",
   "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@electron-toolkit/utils": "^4.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.0.9",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "concurrently": "^9.2.1",
     "electron": "^40.0.0",
     "electron-builder": "^26.4.0",
+    "electron-vite": "^5.0.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "wait-on": "^9.0.3"
+    "vite": "^7.3.1"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@hookform/resolvers": "^5.2.2",
+    "@tailwindcss/vite": "^4.1.18",
     "better-sqlite3": "^12.6.2",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "react-hook-form": "^7.71.1",
+    "react-router-dom": "^7.12.0",
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.3.5"
   }
 }
