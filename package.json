@@ -1,0 +1,38 @@
+{
+  "name": "worship-slides-desktop-app",
+  "version": "1.0.0",
+  "description": "찬양 가사 슬라이드 앱",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron": "wait-on tcp:5173 && electron .",
+    "electron:dev": "concurrently -k \"pnpm dev\" \"pnpm electron\"",
+    "electron:build": "pnpm build && electron-builder"
+  },
+  "keywords": [
+    "worship",
+    "slides",
+    "electron"
+  ],
+  "author": "Je-chan",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.0.9",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "concurrently": "^9.2.1",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "wait-on": "^9.0.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}
