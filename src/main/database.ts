@@ -36,6 +36,19 @@ export const initDatabase = (): void => {
       FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
       UNIQUE(song_id, slide_number)
     );
+
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS song_tags (
+      song_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      PRIMARY KEY (song_id, tag_id),
+      FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    );
   `)
 }
 
@@ -90,6 +103,14 @@ export const getAllSongs = (): Song[] => {
   const db = getDb()
   const stmt = db.prepare('SELECT * FROM songs ORDER BY code, "order"')
   return stmt.all() as Song[]
+}
+
+// 코드별 최대 순서 조회
+export const getMaxOrderByCode = (code: string): number => {
+  const db = getDb()
+  const stmt = db.prepare('SELECT MAX("order") as maxOrder FROM songs WHERE code = ?')
+  const result = stmt.get(code.toUpperCase()) as { maxOrder: number | null } | undefined
+  return result?.maxOrder ?? 0
 }
 
 // 찬양 수정
@@ -159,6 +180,123 @@ export const deleteSlidesBySongId = (songId: number): boolean => {
   const stmt = db.prepare('DELETE FROM slides WHERE song_id = ?')
   const result = stmt.run(songId)
   return result.changes > 0
+}
+
+// ===== Tags CRUD =====
+
+export interface Tag {
+  id: number
+  name: string
+}
+
+// 태그 생성
+export const createTag = (name: string): Tag => {
+  const db = getDb()
+  const stmt = db.prepare('INSERT INTO tags (name) VALUES (?)')
+  const result = stmt.run(name.trim())
+  return {
+    id: result.lastInsertRowid as number,
+    name: name.trim()
+  }
+}
+
+// 모든 태그 조회
+export const getAllTags = (): Tag[] => {
+  const db = getDb()
+  const stmt = db.prepare('SELECT * FROM tags ORDER BY name')
+  return stmt.all() as Tag[]
+}
+
+// 태그 조회 (ID로)
+export const getTagById = (id: number): Tag | null => {
+  const db = getDb()
+  const stmt = db.prepare('SELECT * FROM tags WHERE id = ?')
+  const row = stmt.get(id) as Tag | undefined
+  return row ?? null
+}
+
+// 태그 조회 (이름으로)
+export const getTagByName = (name: string): Tag | null => {
+  const db = getDb()
+  const stmt = db.prepare('SELECT * FROM tags WHERE name = ?')
+  const row = stmt.get(name.trim()) as Tag | undefined
+  return row ?? null
+}
+
+// 태그 수정
+export const updateTag = (id: number, name: string): boolean => {
+  const db = getDb()
+  const stmt = db.prepare('UPDATE tags SET name = ? WHERE id = ?')
+  const result = stmt.run(name.trim(), id)
+  return result.changes > 0
+}
+
+// 태그 삭제
+export const deleteTag = (id: number): boolean => {
+  const db = getDb()
+  const stmt = db.prepare('DELETE FROM tags WHERE id = ?')
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
+// ===== Song-Tag 매핑 =====
+
+// 찬양에 태그 추가
+export const addTagToSong = (songId: number, tagId: number): boolean => {
+  const db = getDb()
+  try {
+    const stmt = db.prepare('INSERT INTO song_tags (song_id, tag_id) VALUES (?, ?)')
+    stmt.run(songId, tagId)
+    return true
+  } catch {
+    return false // 이미 존재하는 경우
+  }
+}
+
+// 찬양에서 태그 제거
+export const removeTagFromSong = (songId: number, tagId: number): boolean => {
+  const db = getDb()
+  const stmt = db.prepare('DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?')
+  const result = stmt.run(songId, tagId)
+  return result.changes > 0
+}
+
+// 찬양의 태그 목록 조회
+export const getTagsBySongId = (songId: number): Tag[] => {
+  const db = getDb()
+  const stmt = db.prepare(`
+    SELECT t.* FROM tags t
+    INNER JOIN song_tags st ON t.id = st.tag_id
+    WHERE st.song_id = ?
+    ORDER BY t.name
+  `)
+  return stmt.all(songId) as Tag[]
+}
+
+// 태그로 찬양 검색
+export const getSongsByTagId = (tagId: number): Song[] => {
+  const db = getDb()
+  const stmt = db.prepare(`
+    SELECT s.* FROM songs s
+    INNER JOIN song_tags st ON s.id = st.song_id
+    WHERE st.tag_id = ?
+    ORDER BY s.code, s."order"
+  `)
+  return stmt.all(tagId) as Song[]
+}
+
+// 찬양의 태그 일괄 설정 (기존 태그 제거 후 새로 추가)
+export const setTagsForSong = (songId: number, tagIds: number[]): void => {
+  const db = getDb()
+
+  // 기존 태그 모두 제거
+  db.prepare('DELETE FROM song_tags WHERE song_id = ?').run(songId)
+
+  // 새 태그 추가
+  const insertStmt = db.prepare('INSERT INTO song_tags (song_id, tag_id) VALUES (?, ?)')
+  for (const tagId of tagIds) {
+    insertStmt.run(songId, tagId)
+  }
 }
 
 // ===== Presentation 관련 =====

@@ -24,12 +24,18 @@ export interface PresentationSlide {
   content: string
 }
 
+export interface Tag {
+  id: number
+  name: string
+}
+
 // API Interfaces
 export interface SongApi {
   create: (title: string, code: string, order: number) => Promise<Song>
   getByCodeOrder: (code: string, order: number) => Promise<Song | null>
   getById: (id: number) => Promise<Song | null>
   getAll: () => Promise<Song[]>
+  getMaxOrderByCode: (code: string) => Promise<number>
   update: (id: number, title: string, code: string, order: number) => Promise<boolean>
   delete: (id: number) => Promise<boolean>
 }
@@ -48,11 +54,29 @@ export interface PresentationApi {
   close: () => Promise<void>
 }
 
+export interface TagApi {
+  create: (name: string) => Promise<Tag>
+  getAll: () => Promise<Tag[]>
+  getById: (id: number) => Promise<Tag | null>
+  update: (id: number, name: string) => Promise<boolean>
+  delete: (id: number) => Promise<boolean>
+}
+
+export interface SongTagApi {
+  add: (songId: number, tagId: number) => Promise<boolean>
+  remove: (songId: number, tagId: number) => Promise<boolean>
+  getBySongId: (songId: number) => Promise<Tag[]>
+  getSongsByTagId: (tagId: number) => Promise<Song[]>
+  setTagsForSong: (songId: number, tagIds: number[]) => Promise<void>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
     songApi: SongApi
     slideApi: SlideApi
     presentationApi: PresentationApi
+    tagApi: TagApi
+    songTagApi: SongTagApi
   }
 }

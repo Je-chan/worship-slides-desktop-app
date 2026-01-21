@@ -1,6 +1,7 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { RootLayout } from '@app/layouts/RootLayout'
 import { HomePage } from '@pages/home'
+import { SongListPage } from '@pages/song-list'
 import { SongCreatePage } from '@pages/song-create'
 import { PresentationPage } from '@pages/presentation'
 
@@ -12,6 +13,10 @@ const router = createHashRouter([
       {
         index: true,
         element: <HomePage />
+      },
+      {
+        path: 'songs',
+        element: <SongListPage />
       },
       {
         path: 'songs/create',

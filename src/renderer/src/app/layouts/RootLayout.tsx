@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom'
 
 const navItems = [
   { path: '/', label: '홈' },
+  { path: '/songs', label: '찬양 목록' },
   { path: '/songs/create', label: '찬양 등록' }
 ]
 

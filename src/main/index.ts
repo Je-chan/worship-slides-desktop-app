@@ -7,6 +7,7 @@ import {
   getSongByCodeOrder,
   getSongById,
   getAllSongs,
+  getMaxOrderByCode,
   updateSong,
   deleteSong,
   createSlide,
@@ -14,8 +15,19 @@ import {
   updateSlide,
   deleteSlide,
   deleteSlidesBySongId,
-  getSlidesForPresentation
+  getSlidesForPresentation,
+  createTag,
+  getAllTags,
+  getTagById,
+  updateTag,
+  deleteTag,
+  addTagToSong,
+  removeTagFromSong,
+  getTagsBySongId,
+  getSongsByTagId,
+  setTagsForSong
 } from './database'
+import { seedDatabase } from './seed'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -89,6 +101,11 @@ app.whenReady().then(() => {
   // DB 초기화
   initDatabase()
 
+  // 개발 모드에서 테스트 데이터 시드
+  if (is.dev) {
+    seedDatabase()
+  }
+
   electronApp.setAppUserModelId('com.worship-slides')
 
   app.on('browser-window-created', (_, window) => {
@@ -110,6 +127,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('song:getAll', () => {
     return getAllSongs()
+  })
+
+  ipcMain.handle('song:getMaxOrderByCode', (_, code: string) => {
+    return getMaxOrderByCode(code)
   })
 
   ipcMain.handle('song:update', (_, id: number, title: string, code: string, order: number) => {
@@ -139,6 +160,48 @@ app.whenReady().then(() => {
 
   ipcMain.handle('slide:deleteBySongId', (_, songId: number) => {
     return deleteSlidesBySongId(songId)
+  })
+
+  // ===== Tag IPC Handlers =====
+  ipcMain.handle('tag:create', (_, name: string) => {
+    return createTag(name)
+  })
+
+  ipcMain.handle('tag:getAll', () => {
+    return getAllTags()
+  })
+
+  ipcMain.handle('tag:getById', (_, id: number) => {
+    return getTagById(id)
+  })
+
+  ipcMain.handle('tag:update', (_, id: number, name: string) => {
+    return updateTag(id, name)
+  })
+
+  ipcMain.handle('tag:delete', (_, id: number) => {
+    return deleteTag(id)
+  })
+
+  // ===== Song-Tag IPC Handlers =====
+  ipcMain.handle('songTag:add', (_, songId: number, tagId: number) => {
+    return addTagToSong(songId, tagId)
+  })
+
+  ipcMain.handle('songTag:remove', (_, songId: number, tagId: number) => {
+    return removeTagFromSong(songId, tagId)
+  })
+
+  ipcMain.handle('songTag:getBySongId', (_, songId: number) => {
+    return getTagsBySongId(songId)
+  })
+
+  ipcMain.handle('songTag:getSongsByTagId', (_, tagId: number) => {
+    return getSongsByTagId(tagId)
+  })
+
+  ipcMain.handle('songTag:setTagsForSong', (_, songId: number, tagIds: number[]) => {
+    return setTagsForSong(songId, tagIds)
   })
 
   // ===== Presentation IPC Handlers =====

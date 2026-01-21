@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// 허용되는 코드 목록
+export const ALLOWED_CODES = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const
+export type AllowedCode = (typeof ALLOWED_CODES)[number]
+
 export const slideSchema = z.object({
   id: z.string(),
   content: z.string()
@@ -12,9 +16,11 @@ export const songCreateSchema = z.object({
     .max(100, '찬양 제목은 100자 이내로 입력해주세요.'),
   code: z
     .string()
-    .min(1, '코드를 입력해주세요.')
-    .max(5, '코드는 5자 이내로 입력해주세요.')
-    .regex(/^[a-zA-Z]+$/, '코드는 영문자만 사용할 수 있습니다.')
+    .min(1, '코드를 선택해주세요.')
+    .refine(
+      (val) => ALLOWED_CODES.includes(val.toUpperCase() as AllowedCode),
+      '코드는 A, B, C, D, E, F, G 중 하나여야 합니다.'
+    )
     .transform((val) => val.toUpperCase()),
   order: z
     .number({ invalid_type_error: '순서를 입력해주세요.' })
@@ -24,8 +30,8 @@ export const songCreateSchema = z.object({
     .array(slideSchema)
     .min(1, '최소 하나의 슬라이드가 필요합니다.')
     .refine(
-      (slides) => slides.some((slide) => slide.content.trim().length > 0),
-      '최소 하나의 가사를 입력해주세요.'
+      (slides) => slides.length > 0 && slides[0].content.trim().length > 0,
+      '첫 번째 가사 슬라이드는 반드시 입력해야 합니다.'
     )
 })
 
