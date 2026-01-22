@@ -178,17 +178,17 @@ export function SongCreatePage(): JSX.Element {
   const canSubmit = isFirstSlideValid && !orderDuplicateError
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">찬양 등록</h1>
-        <p className="mt-1 text-slate-600">새로운 찬양과 가사를 등록합니다.</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 등록</h1>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">새로운 찬양과 가사를 등록합니다.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* 찬양 정보 */}
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">찬양 정보</h2>
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100">찬양 정보</h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField error={errors.title?.message}>
@@ -216,10 +216,10 @@ export function SongCreatePage(): JSX.Element {
                       id="code"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                      className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-200 ease-out shadow-sm bg-white dark:bg-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 focus:shadow-md hover:border-slate-400 dark:hover:border-slate-500 ${
                         errors.code
-                          ? 'border-red-500 focus:ring-red-500'
-                          : 'border-slate-300 hover:border-slate-400'
+                          ? 'border-red-400 focus:ring-red-500/50 focus:border-red-400'
+                          : 'border-slate-200 dark:border-slate-600'
                       }`}
                     >
                       <option value="">코드 선택</option>
@@ -268,9 +268,9 @@ export function SongCreatePage(): JSX.Element {
             </div>
 
             {watchCode && watchOrder && !orderDuplicateError && (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 찬양 식별자:{' '}
-                <span className="font-mono font-medium text-primary-600">
+                <span className="font-mono font-medium text-primary-600 dark:text-primary-400">
                   {watchCode.toLowerCase()}
                   {watchOrder}
                 </span>
@@ -294,14 +294,14 @@ export function SongCreatePage(): JSX.Element {
                       }
                     }}
                   />
-                  <Button type="button" variant="secondary" onClick={handleCreateTag}>
+                  <Button type="button" variant="secondary" className="min-w-1/5" onClick={handleCreateTag}>
                     추가
                   </Button>
                 </div>
 
                 {/* 기존 태그 목록 */}
                 {tags.length === 0 ? (
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-400 italic">
                     등록된 태그가 없습니다. 위 입력창에서 새 태그를 생성해주세요.
                   </p>
                 ) : (
@@ -311,10 +311,10 @@ export function SongCreatePage(): JSX.Element {
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 shadow-sm ${
                           selectedTagIds.includes(tag.id)
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100'
                         }`}
                       >
                         {tag.name}
@@ -331,8 +331,8 @@ export function SongCreatePage(): JSX.Element {
         <Card>
           <CardHeader className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-slate-900">슬라이드 (가사)</h2>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">슬라이드 (가사)</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 첫 번째 슬라이드는 자동으로 제목이 됩니다. 아래에 가사를 슬라이드별로 나누어
                 입력하세요.
               </p>
@@ -340,10 +340,10 @@ export function SongCreatePage(): JSX.Element {
           </CardHeader>
           <CardContent className="space-y-4">
             {errors.slides?.root?.message && (
-              <p className="text-sm text-red-600">{errors.slides.root.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.slides.root.message}</p>
             )}
             {errors.slides?.message && (
-              <p className="text-sm text-red-600">{errors.slides.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.slides.message}</p>
             )}
 
             {fields.map((field, index) => {
@@ -357,7 +357,7 @@ export function SongCreatePage(): JSX.Element {
                     <div className="flex items-center gap-2">
                       <Label>슬라이드 {index + 2}</Label>
                       {isRequired && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-medium">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 font-medium">
                           필수
                         </span>
                       )}
@@ -368,7 +368,7 @@ export function SongCreatePage(): JSX.Element {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeSlide(index)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
                       >
                         삭제
                       </Button>
@@ -378,10 +378,10 @@ export function SongCreatePage(): JSX.Element {
                     {...register(`slides.${index}.content`)}
                     placeholder={isRequired ? '첫 번째 가사를 입력하세요 (필수)' : '가사를 입력하세요...'}
                     rows={4}
-                    className={isRequired && isEmpty ? 'border-red-300' : ''}
+                    className={isRequired && isEmpty ? 'border-red-300 dark:border-red-700' : ''}
                   />
                   {isRequired && isEmpty && (
-                    <p className="text-xs text-red-500 mt-1">첫 번째 가사는 필수입니다.</p>
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">첫 번째 가사는 필수입니다.</p>
                   )}
                 </FormField>
               )
@@ -395,7 +395,7 @@ export function SongCreatePage(): JSX.Element {
 
         {/* 저장 버튼 */}
         <div className="flex justify-end gap-3">
-          {submitError && <p className="text-sm text-red-600 self-center">{submitError}</p>}
+          {submitError && <p className="text-sm text-red-600 dark:text-red-400 self-center">{submitError}</p>}
           <Button type="button" variant="secondary" onClick={() => navigate('/')}>
             취소
           </Button>

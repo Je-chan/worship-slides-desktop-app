@@ -1,30 +1,183 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Custom theme variables */
 @theme {
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-primary-950: #082f49;
 }
 
 /* Base styles */
-html, body {
-  @apply overflow-x-hidden;
+html {
+  scroll-behavior: smooth;
+}
+
+html, body, #root {
+  @apply h-full overflow-hidden;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900 antialiased;
+  @apply transition-colors duration-300;
+}
+
+/* Dark mode base */
+.dark body {
+  @apply bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100;
+}
+
+/* Custom scrollbar - hidden by default, show on hover */
+* {
+  scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Show scrollbar on hover for scrollable containers */
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto,
+main {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.overflow-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  display: block;
+}
+
+.overflow-auto::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+}
+
+.overflow-auto:hover::-webkit-scrollbar-thumb,
+.overflow-y-auto:hover::-webkit-scrollbar-thumb,
+.overflow-x-auto:hover::-webkit-scrollbar-thumb,
+main:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+}
+
+.overflow-auto:hover,
+.overflow-y-auto:hover,
+.overflow-x-auto:hover,
+main:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-auto:hover::-webkit-scrollbar-thumb,
+.dark .overflow-y-auto:hover::-webkit-scrollbar-thumb,
+.dark .overflow-x-auto:hover::-webkit-scrollbar-thumb,
+.dark main:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.3);
+}
+
+.dark .overflow-auto:hover,
+.dark .overflow-y-auto:hover,
+.dark .overflow-x-auto:hover,
+.dark main:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
 
 /* Focus ring utility */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+/* Card shadow utility */
+.card-shadow {
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+.card-shadow-hover {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  @apply transition-all duration-200 ease-out;
+}
+
+/* Glass effect */
+.glass {
+  @apply bg-white/80 backdrop-blur-sm;
+}
+
+.dark .glass {
+  @apply bg-slate-800/80;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary-100 text-primary-700;
+}
+
+.dark .badge-primary {
+  @apply bg-primary-900/50 text-primary-300;
+}
+
+.badge-slate {
+  @apply bg-slate-100 text-slate-600;
+}
+
+.dark .badge-slate {
+  @apply bg-slate-700 text-slate-300;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out;
 }

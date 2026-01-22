@@ -22,7 +22,7 @@ export function SongListPage(): JSX.Element {
   const [songs, setSongs] = useState<Song[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('group')
-  const [sortBy, setSortBy] = useState<SortBy>('code')
+  const [sortBy, setSortBy] = useState<SortBy>('title')
   const [isLoading, setIsLoading] = useState(true)
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
@@ -59,12 +59,12 @@ export function SongListPage(): JSX.Element {
   const filteredSongs = useMemo(() => {
     let result = songs
 
-    // 태그 필터링
+    // 태그 필터링 (OR 조건: 선택된 태그 중 하나라도 포함되면 표시)
     if (selectedTagIds.length > 0) {
       result = result.filter((song) => {
         const songTags = songTagMap[song.id] || []
         const songTagIds = songTags.map((t) => t.id)
-        return selectedTagIds.every((tagId) => songTagIds.includes(tagId))
+        return selectedTagIds.some((tagId) => songTagIds.includes(tagId))
       })
     }
 
@@ -149,24 +149,32 @@ export function SongListPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-slate-500">로딩 중...</p>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 dark:text-slate-400">로딩 중...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">찬양 목록</h1>
-          <p className="mt-1 text-slate-600">
-            총 {songs.length}개의 찬양이 등록되어 있습니다.
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 목록</h1>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            총 <span className="font-semibold text-primary-600 dark:text-primary-400">{songs.length}</span>개의 찬양이 등록되어 있습니다.
           </p>
         </div>
         <Link to="/songs/create">
-          <Button>+ 새 찬양</Button>
+          <Button>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            새 찬양
+          </Button>
         </Link>
       </div>
 
@@ -184,7 +192,7 @@ export function SongListPage(): JSX.Element {
 
           {/* 태그 필터 */}
           <div className="space-y-3">
-            <span className="text-sm text-slate-600">태그 필터:</span>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">태그 필터:</span>
 
             {/* 선택된 태그 (Badge) */}
             {selectedTags.length > 0 && (
@@ -192,12 +200,12 @@ export function SongListPage(): JSX.Element {
                 {selectedTags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-primary-600 text-white"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-sm"
                   >
                     {tag.name}
                     <button
                       onClick={() => removeTag(tag.id)}
-                      className="ml-1 hover:bg-primary-700 rounded-full p-0.5"
+                      className="ml-0.5 hover:bg-white/20 rounded-full p-0.5 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -211,15 +219,15 @@ export function SongListPage(): JSX.Element {
             {/* 선택 가능한 태그 목록 */}
             <div className="flex flex-wrap gap-2">
               {availableTags.length === 0 && selectedTags.length === 0 ? (
-                <span className="text-sm text-slate-400">등록된 태그가 없습니다</span>
+                <span className="text-sm text-slate-400 italic">등록된 태그가 없습니다</span>
               ) : availableTags.length === 0 ? (
-                <span className="text-sm text-slate-400">모든 태그가 선택되었습니다</span>
+                <span className="text-sm text-slate-400 italic">모든 태그가 선택되었습니다</span>
               ) : (
                 availableTags.map((tag) => (
                   <button
                     key={tag.id}
                     onClick={() => selectTag(tag.id)}
-                    className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100 transition-all duration-200 shadow-sm"
                   >
                     {tag.name}
                   </button>
@@ -229,26 +237,26 @@ export function SongListPage(): JSX.Element {
           </div>
 
           {/* 뷰 모드 & 정렬 */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6 pt-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">보기:</span>
-              <div className="flex rounded-lg border border-slate-300 overflow-hidden">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">보기:</span>
+              <div className="flex rounded-xl border border-slate-200 dark:border-slate-600 overflow-hidden shadow-sm">
                 <button
                   onClick={() => setViewMode('group')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     viewMode === 'group'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white text-slate-700 hover:bg-slate-50'
+                      ? 'bg-primary-600 text-white shadow-inner'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   그룹
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     viewMode === 'list'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white text-slate-700 hover:bg-slate-50'
+                      ? 'bg-primary-600 text-white shadow-inner'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   리스트
@@ -257,19 +265,19 @@ export function SongListPage(): JSX.Element {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className={`text-sm ${viewMode === 'group' ? 'text-slate-400' : 'text-slate-600'}`}>
+              <span className={`text-sm font-medium ${viewMode === 'group' ? 'text-slate-400' : 'text-slate-600 dark:text-slate-400'}`}>
                 정렬:
               </span>
-              <div className={`flex rounded-lg border overflow-hidden ${viewMode === 'group' ? 'border-slate-200' : 'border-slate-300'}`}>
+              <div className={`flex rounded-xl border overflow-hidden shadow-sm ${viewMode === 'group' ? 'border-slate-100 dark:border-slate-700 opacity-60' : 'border-slate-200 dark:border-slate-600'}`}>
                 <button
                   onClick={() => setSortBy('code')}
                   disabled={viewMode === 'group'}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     viewMode === 'group'
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      ? 'bg-slate-50 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
                       : sortBy === 'code'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-primary-600 text-white shadow-inner'
+                        : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   코드순
@@ -277,19 +285,19 @@ export function SongListPage(): JSX.Element {
                 <button
                   onClick={() => setSortBy('title')}
                   disabled={viewMode === 'group'}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     viewMode === 'group'
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      ? 'bg-slate-50 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
                       : sortBy === 'title'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-primary-600 text-white shadow-inner'
+                        : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   제목순
                 </button>
               </div>
               {viewMode === 'group' && (
-                <span className="text-xs text-slate-400">(그룹 뷰는 코드순 고정)</span>
+                <span className="text-xs text-slate-400 italic">(그룹 뷰는 코드순 고정)</span>
               )}
             </div>
           </div>
@@ -298,29 +306,37 @@ export function SongListPage(): JSX.Element {
 
       {/* 검색 결과 없음 */}
       {filteredSongs.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-slate-500">검색 결과가 없습니다.</p>
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="text-slate-500 dark:text-slate-400">검색 결과가 없습니다.</p>
         </div>
       )}
 
       {/* 그룹 뷰 */}
       {viewMode === 'group' && filteredSongs.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {groupCodes.map((code) => (
             <Disclosure key={code} defaultOpen>
               {({ open }) => (
-                <Card>
-                  <DisclosureButton className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="w-10 h-10 rounded-lg bg-primary-100 text-primary-700 font-bold flex items-center justify-center">
+                <Card className="overflow-hidden">
+                  <DisclosureButton className="w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-all duration-200">
+                    <div className="flex items-center gap-4">
+                      <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-bold text-lg flex items-center justify-center shadow-sm">
                         {code}
                       </span>
-                      <span className="font-medium text-slate-900">
-                        {groupedSongs[code].length}개의 찬양
-                      </span>
+                      <div className="text-left">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          {groupedSongs[code].length}개의 찬양
+                        </span>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">코드 {code} 그룹</p>
+                      </div>
                     </div>
                     <svg
-                      className={`w-5 h-5 text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -329,21 +345,21 @@ export function SongListPage(): JSX.Element {
                     </svg>
                   </DisclosureButton>
                   <DisclosurePanel>
-                    <div className="border-t border-slate-200">
+                    <div className="border-t border-slate-100 dark:border-slate-700">
                       {groupedSongs[code].map((song, index) => {
                         const songTags = songTagMap[song.id] || []
                         return (
                           <div
                             key={song.id}
-                            className={`px-6 py-3 flex items-center justify-between hover:bg-slate-50 ${
-                              index !== groupedSongs[code].length - 1 ? 'border-b border-slate-100' : ''
+                            className={`px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors ${
+                              index !== groupedSongs[code].length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''
                             }`}
                           >
                             <div className="flex items-center gap-4">
-                              <span className="w-8 text-center font-mono text-sm text-slate-500">
+                              <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-700 font-mono text-sm text-slate-600 dark:text-slate-300 font-medium flex items-center justify-center">
                                 {song.order}
                               </span>
-                              <span className="text-slate-900">{song.title}</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-medium">{song.title}</span>
                             </div>
                             {/* 태그 Badge */}
                             <div className="flex items-center gap-2">
@@ -351,13 +367,13 @@ export function SongListPage(): JSX.Element {
                                 songTags.map((tag) => (
                                   <span
                                     key={tag.id}
-                                    className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600"
+                                    className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                                   >
                                     {tag.name}
                                   </span>
                                 ))
                               ) : (
-                                <span className="text-xs text-slate-400">태그 없음</span>
+                                <span className="text-xs text-slate-400 italic">태그 없음</span>
                               )}
                             </div>
                           </div>
@@ -374,20 +390,20 @@ export function SongListPage(): JSX.Element {
 
       {/* 리스트 뷰 */}
       {viewMode === 'list' && filteredSongs.length > 0 && (
-        <Card>
-          <div className="divide-y divide-slate-200">
+        <Card className="overflow-hidden">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {sortedSongs.map((song) => {
               const songTags = songTagMap[song.id] || []
               return (
                 <div
                   key={song.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50"
+                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="w-12 h-8 rounded bg-primary-100 text-primary-700 font-mono text-sm font-medium flex items-center justify-center">
+                    <span className="w-14 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold flex items-center justify-center shadow-sm">
                       {song.code}{song.order}
                     </span>
-                    <span className="text-slate-900">{song.title}</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-medium">{song.title}</span>
                   </div>
                   {/* 태그 Badge */}
                   <div className="flex items-center gap-2">
@@ -395,13 +411,13 @@ export function SongListPage(): JSX.Element {
                       songTags.map((tag) => (
                         <span
                           key={tag.id}
-                          className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600"
+                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                         >
                           {tag.name}
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-400">태그 없음</span>
+                      <span className="text-xs text-slate-400 italic">태그 없음</span>
                     )}
                   </div>
                 </div>

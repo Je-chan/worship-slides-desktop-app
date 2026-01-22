@@ -7,7 +7,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={`bg-white rounded-xl border border-slate-200 ${className}`}
+        className={`
+          bg-white rounded-2xl border border-slate-200/60
+          shadow-sm hover:shadow-md
+          transition-all duration-200
+          dark:bg-slate-800 dark:border-slate-700/60
+          ${className}
+        `}
         {...props}
       >
         {children}
@@ -25,7 +31,7 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`px-6 py-4 border-b border-slate-200 ${className}`}
+        className={`px-6 py-5 border-b border-slate-100 dark:border-slate-700 ${className}`}
         {...props}
       >
         {children}
@@ -41,7 +47,7 @@ interface CardContentProps extends ComponentPropsWithoutRef<'div'> {}
 export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className = '', children, ...props }, ref) => {
     return (
-      <div ref={ref} className={`px-6 py-4 ${className}`} {...props}>
+      <div ref={ref} className={`px-6 py-5 ${className}`} {...props}>
         {children}
       </div>
     )
@@ -57,7 +63,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={`px-6 py-4 border-t border-slate-200 ${className}`}
+        className={`px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl dark:border-slate-700 dark:bg-slate-900/50 ${className}`}
         {...props}
       >
         {children}

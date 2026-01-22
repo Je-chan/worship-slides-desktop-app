@@ -10,7 +10,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <HeadlessLabel
         ref={ref}
-        className={`block text-sm font-medium text-slate-700 ${className}`}
+        className={`block text-sm font-medium text-slate-700 dark:text-slate-300 ${className}`}
         {...props}
       >
         {children}
