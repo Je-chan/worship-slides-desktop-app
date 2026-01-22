@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
+import { Plus, X, Search, ChevronDown } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
 
 type ViewMode = 'list' | 'group'
@@ -177,9 +178,7 @@ export function SongListPage(): JSX.Element {
         </div>
         <Link to="/songs/create">
           <Button>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="w-4 h-4" />
             새 찬양
           </Button>
         </Link>
@@ -214,9 +213,7 @@ export function SongListPage(): JSX.Element {
                       onClick={() => removeTag(tag.id)}
                       className="ml-0.5 hover:bg-white/20 rounded-full p-0.5 transition-colors"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </span>
                 ))}
@@ -315,9 +312,7 @@ export function SongListPage(): JSX.Element {
       {filteredSongs.length === 0 && (
         <div className="text-center py-16">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
           </div>
           <p className="text-slate-500 dark:text-slate-400">검색 결과가 없습니다.</p>
         </div>
@@ -342,14 +337,9 @@ export function SongListPage(): JSX.Element {
                         <p className="text-sm text-slate-500 dark:text-slate-400">코드 {code} 그룹</p>
                       </div>
                     </div>
-                    <svg
+                    <ChevronDown
                       className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    />
                   </DisclosureButton>
                   <DisclosurePanel>
                     <div className="border-t border-slate-100 dark:border-slate-700">

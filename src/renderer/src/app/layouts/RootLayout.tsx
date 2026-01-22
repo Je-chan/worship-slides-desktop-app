@@ -1,10 +1,11 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useTheme } from '@shared/lib'
+import { Home, Music, PenLine, Moon, Sun } from 'lucide-react'
 
 const navItems = [
-  { path: '/', label: '홈', icon: '🏠' },
-  { path: '/songs', label: '찬양 목록', icon: '🎵' },
-  { path: '/songs/create', label: '찬양 등록', icon: '✏️' }
+  { path: '/', label: '홈', icon: Home },
+  { path: '/songs', label: '찬양 목록', icon: Music },
+  { path: '/songs/create', label: '찬양 등록', icon: PenLine }
 ]
 
 export function RootLayout(): JSX.Element {
@@ -31,6 +32,7 @@ export function RootLayout(): JSX.Element {
               <div className="flex gap-1">
                 {navItems.map((item) => {
                   const isActive = location.pathname === item.path
+                  const Icon = item.icon
                   return (
                     <Link
                       key={item.path}
@@ -45,7 +47,7 @@ export function RootLayout(): JSX.Element {
                         }
                       `}
                     >
-                      <span>{item.icon}</span>
+                      <Icon className="w-4 h-4" />
                       <span>{item.label}</span>
                     </Link>
                   )
@@ -60,13 +62,9 @@ export function RootLayout(): JSX.Element {
               aria-label="테마 변경"
             >
               {theme === 'light' ? (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
+                <Moon className="w-5 h-5" />
               ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <Sun className="w-5 h-5" />
               )}
             </button>
           </div>
