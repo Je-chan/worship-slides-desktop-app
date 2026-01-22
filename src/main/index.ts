@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import { copyFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import {
   initDatabase,
@@ -60,9 +61,15 @@ function createWindow(): void {
 
 // Presentation 전용 창 (Kiosk 모드)
 let presentationWindow: BrowserWindow | null = null
+let presentationSlides: unknown[] = []
 
-function createPresentationWindow(): void {
+function createPresentationWindow(slides: unknown[]): void {
+  // 슬라이드 데이터 저장
+  presentationSlides = slides
+
   if (presentationWindow) {
+    // 이미 창이 있으면 슬라이드만 업데이트하고 포커스
+    presentationWindow.webContents.send('presentation:updateSlides', slides)
     presentationWindow.focus()
     return
   }
@@ -72,7 +79,7 @@ function createPresentationWindow(): void {
     height: 1080,
     show: false,
     autoHideMenuBar: true,
-    kiosk: true,
+    fullscreen: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -81,10 +88,13 @@ function createPresentationWindow(): void {
 
   presentationWindow.on('ready-to-show', () => {
     presentationWindow?.show()
+    // 창이 준비되면 슬라이드 데이터 전송
+    presentationWindow?.webContents.send('presentation:updateSlides', presentationSlides)
   })
 
   presentationWindow.on('closed', () => {
     presentationWindow = null
+    presentationSlides = []
   })
 
   // Presentation 모드 URL/파일 로드
@@ -94,6 +104,12 @@ function createPresentationWindow(): void {
     presentationWindow.loadFile(join(__dirname, '../renderer/index.html'), {
       hash: '/presentation'
     })
+  }
+}
+
+function togglePresentationFullscreen(fullscreen: boolean): void {
+  if (presentationWindow) {
+    presentationWindow.setFullScreen(fullscreen)
   }
 }
 
@@ -209,8 +225,8 @@ app.whenReady().then(() => {
     return getSlidesForPresentation(songCodes)
   })
 
-  ipcMain.handle('presentation:open', () => {
-    createPresentationWindow()
+  ipcMain.handle('presentation:open', (_, slides: unknown[]) => {
+    createPresentationWindow(slides)
   })
 
   ipcMain.handle('presentation:close', () => {
@@ -218,6 +234,59 @@ app.whenReady().then(() => {
       presentationWindow.close()
       presentationWindow = null
     }
+  })
+
+  ipcMain.handle('presentation:setFullscreen', (_, fullscreen: boolean) => {
+    togglePresentationFullscreen(fullscreen)
+  })
+
+  ipcMain.handle('presentation:isFullscreen', () => {
+    return presentationWindow?.isFullScreen() ?? false
+  })
+
+  // ===== Image IPC Handlers =====
+  const imagesDir = join(app.getPath('userData'), 'backgrounds')
+
+  // 이미지 폴더 생성
+  if (!existsSync(imagesDir)) {
+    mkdirSync(imagesDir, { recursive: true })
+  }
+
+  ipcMain.handle('image:select', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }]
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+
+    const sourcePath = result.filePaths[0]
+    const fileName = `bg_${Date.now()}_${sourcePath.split('/').pop()}`
+    const destPath = join(imagesDir, fileName)
+
+    try {
+      copyFileSync(sourcePath, destPath)
+      return `file://${destPath}`
+    } catch (error) {
+      console.error('이미지 복사 실패:', error)
+      return null
+    }
+  })
+
+  ipcMain.handle('image:delete', (_, imagePath: string) => {
+    try {
+      // file:// 프로토콜 제거
+      const filePath = imagePath.replace('file://', '')
+      if (existsSync(filePath) && filePath.startsWith(imagesDir)) {
+        unlinkSync(filePath)
+        return true
+      }
+    } catch (error) {
+      console.error('이미지 삭제 실패:', error)
+    }
+    return false
   })
 
   createWindow()

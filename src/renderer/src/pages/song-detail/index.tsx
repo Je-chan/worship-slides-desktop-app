@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -12,67 +12,52 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
-import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
+import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
+
+interface Song {
+  id: number
+  title: string
+  code: string
+  order: number
+}
+
+interface Slide {
+  id: number
+  song_id: number
+  slide_number: number
+  content: string
+}
 
 interface Tag {
   id: number
   name: string
 }
 
-export function SongCreatePage(): JSX.Element {
+type ViewMode = 'view' | 'edit'
+
+export function SongDetailPage(): JSX.Element {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const songId = parseInt(id || '0', 10)
+
+  const [mode, setMode] = useState<ViewMode>('view')
+  const [song, setSong] = useState<Song | null>(null)
+  const [slides, setSlides] = useState<Slide[]>([])
   const [tags, setTags] = useState<Tag[]>([])
+  const [allTags, setAllTags] = useState<Tag[]>([])
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [newTagName, setNewTagName] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [orderDuplicateError, setOrderDuplicateError] = useState<string | null>(null)
-
-  // 태그 목록 로드
-  useEffect(() => {
-    const loadTags = async () => {
-      try {
-        const tagsData = await window.tagApi.getAll()
-        setTags(tagsData)
-      } catch (error) {
-        console.error('태그 목록 로드 실패:', error)
-      }
-    }
-    loadTags()
-  }, [])
-
-  // 태그 토글
-  const toggleTag = (tagId: number) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    )
-  }
-
-  // 태그 생성
-  const handleCreateTag = async () => {
-    const trimmed = newTagName.trim()
-    if (!trimmed) return
-
-    if (tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
-      setNewTagName('')
-      return
-    }
-
-    try {
-      const newTag = await window.tagApi.create(trimmed)
-      setTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, 'ko')))
-      setSelectedTagIds((prev) => [...prev, newTag.id])
-      setNewTagName('')
-    } catch (error) {
-      console.error('태그 생성 실패:', error)
-    }
-  }
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const {
     register,
     control,
     handleSubmit,
     watch,
-    setValue,
+    reset,
     formState: { errors, isSubmitting }
   } = useForm<SongCreateFormData>({
     resolver: zodResolver(songCreateSchema),
@@ -91,17 +76,15 @@ export function SongCreatePage(): JSX.Element {
 
   // 실시간 슬라이드 미리보기 계산
   const previewSlides = useMemo(() => {
-    const slides: string[] = []
-    // 제목 슬라이드
+    const result: string[] = []
     if (watchTitle.trim()) {
-      slides.push(watchTitle.trim())
+      result.push(watchTitle.trim())
     }
-    // 가사 슬라이드들
     if (watchLyrics) {
       const lyricsSlides = parseLyricsToSlides(watchLyrics)
-      slides.push(...lyricsSlides)
+      result.push(...lyricsSlides)
     }
-    return slides
+    return result
   }, [watchTitle, watchLyrics])
 
   // 미리보기 자동 스크롤
@@ -111,12 +94,10 @@ export function SongCreatePage(): JSX.Element {
   const handlePreviewScroll = useCallback(() => {
     const el = previewRef.current
     if (!el) return
-    // 스크롤이 맨 아래에서 20px 이내면 "맨 아래"로 간주
     const threshold = 20
     isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
   }, [])
 
-  // 슬라이드가 변경되고 맨 아래를 보고 있었다면 자동 스크롤
   useEffect(() => {
     const el = previewRef.current
     if (el && isAtBottomRef.current) {
@@ -124,27 +105,83 @@ export function SongCreatePage(): JSX.Element {
     }
   }, [previewSlides])
 
-  // 코드 변경 시 순서 자동 계산
+  // 데이터 로드
   useEffect(() => {
-    const updateOrder = async () => {
-      if (watchCode && ALLOWED_CODES.includes(watchCode.toUpperCase() as typeof ALLOWED_CODES[number])) {
-        try {
-          const maxOrder = await window.songApi.getMaxOrderByCode(watchCode)
-          setValue('order', maxOrder + 1)
-          setOrderDuplicateError(null)
-        } catch (error) {
-          console.error('순서 조회 실패:', error)
+    const loadData = async () => {
+      if (!songId) {
+        navigate('/songs')
+        return
+      }
+
+      try {
+        const [songData, slidesData, songTags, allTagsData] = await Promise.all([
+          window.songApi.getById(songId),
+          window.slideApi.getBySongId(songId),
+          window.songTagApi.getBySongId(songId),
+          window.tagApi.getAll()
+        ])
+
+        if (!songData) {
+          navigate('/songs')
+          return
         }
+
+        setSong(songData)
+        setSlides(slidesData)
+        setTags(songTags)
+        setAllTags(allTagsData)
+        setSelectedTagIds(songTags.map((t) => t.id))
+
+        // 폼 초기값 설정 (슬라이드 2번부터가 가사)
+        const lyricsSlides = slidesData.filter((s) => s.slide_number >= 2).map((s) => s.content)
+        reset({
+          title: songData.title,
+          code: songData.code,
+          order: songData.order,
+          lyrics: slidesToLyrics(lyricsSlides)
+        })
+      } catch (error) {
+        console.error('데이터 로드 실패:', error)
+        navigate('/songs')
+      } finally {
+        setIsLoading(false)
       }
     }
-    updateOrder()
-  }, [watchCode, setValue])
+    loadData()
+  }, [songId, navigate, reset])
+
+  // 태그 토글
+  const toggleTag = (tagId: number) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    )
+  }
+
+  // 태그 생성
+  const handleCreateTag = async () => {
+    const trimmed = newTagName.trim()
+    if (!trimmed) return
+
+    if (allTags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      setNewTagName('')
+      return
+    }
+
+    try {
+      const newTag = await window.tagApi.create(trimmed)
+      setAllTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, 'ko')))
+      setSelectedTagIds((prev) => [...prev, newTag.id])
+      setNewTagName('')
+    } catch (error) {
+      console.error('태그 생성 실패:', error)
+    }
+  }
 
   // 순서 중복 검증
   const validateOrder = async (code: string, order: number): Promise<boolean> => {
     try {
       const existing = await window.songApi.getByCodeOrder(code, order)
-      if (existing) {
+      if (existing && existing.id !== songId) {
         setOrderDuplicateError(`${code}${order}는 이미 존재합니다.`)
         return false
       }
@@ -155,52 +192,258 @@ export function SongCreatePage(): JSX.Element {
     }
   }
 
+  // 수정 모드로 전환
+  const enterEditMode = () => {
+    setMode('edit')
+    setOrderDuplicateError(null)
+    setSubmitError(null)
+  }
+
+  // 읽기 모드로 전환 (변경 취소)
+  const cancelEdit = () => {
+    if (!song) return
+
+    const lyricsSlides = slides.filter((s) => s.slide_number >= 2).map((s) => s.content)
+    reset({
+      title: song.title,
+      code: song.code,
+      order: song.order,
+      lyrics: slidesToLyrics(lyricsSlides)
+    })
+    setSelectedTagIds(tags.map((t) => t.id))
+    setOrderDuplicateError(null)
+    setSubmitError(null)
+    setMode('view')
+  }
+
   // 가사 유효성 체크
   const hasLyrics = watchLyrics && parseLyricsToSlides(watchLyrics).length > 0
 
+  // 저장
   const onSubmit = async (data: SongCreateFormData) => {
     setSubmitError(null)
 
-    // 순서 중복 검증
     const isOrderValid = await validateOrder(data.code, data.order)
     if (!isOrderValid) {
       return
     }
 
     try {
-      // 1. 찬양 생성
-      const song = await window.songApi.create(data.title.trim(), data.code, data.order)
+      // 1. 찬양 수정
+      await window.songApi.update(songId, data.title.trim(), data.code, data.order)
 
-      // 2. 슬라이드 생성 (1번은 제목, 2번부터 가사)
-      await window.slideApi.create(song.id, 1, data.title.trim())
+      // 2. 기존 슬라이드 삭제 후 재생성
+      await window.slideApi.deleteBySongId(songId)
 
+      // 제목 슬라이드 (1번)
+      await window.slideApi.create(songId, 1, data.title.trim())
+
+      // 가사 슬라이드 (2번부터)
       const lyricsSlides = parseLyricsToSlides(data.lyrics)
       let slideNumber = 2
       for (const content of lyricsSlides) {
-        await window.slideApi.create(song.id, slideNumber, content)
+        await window.slideApi.create(songId, slideNumber, content)
         slideNumber++
       }
 
-      // 3. 태그 연결
-      if (selectedTagIds.length > 0) {
-        await window.songTagApi.setTagsForSong(song.id, selectedTagIds)
-      }
+      // 3. 태그 업데이트
+      await window.songTagApi.setTagsForSong(songId, selectedTagIds)
 
-      navigate('/songs')
+      // 4. 데이터 다시 로드
+      const [updatedSong, updatedSlides, updatedTags] = await Promise.all([
+        window.songApi.getById(songId),
+        window.slideApi.getBySongId(songId),
+        window.songTagApi.getBySongId(songId)
+      ])
+
+      setSong(updatedSong)
+      setSlides(updatedSlides)
+      setTags(updatedTags)
+
+      setMode('view')
     } catch (error) {
       console.error('저장 실패:', error)
       setSubmitError('저장에 실패했습니다. 다시 시도해주세요.')
     }
   }
 
-  // 저장 버튼 활성화 조건
+  // 삭제
+  const handleDelete = async () => {
+    try {
+      await window.slideApi.deleteBySongId(songId)
+      await window.songTagApi.setTagsForSong(songId, [])
+      await window.songApi.delete(songId)
+      navigate('/songs')
+    } catch (error) {
+      console.error('삭제 실패:', error)
+      setSubmitError('삭제에 실패했습니다.')
+    }
+  }
+
   const canSubmit = hasLyrics && !orderDuplicateError
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 dark:text-slate-400">로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!song) {
+    return null
+  }
+
+  // 읽기 모드
+  if (mode === 'view') {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        {/* 헤더 */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-3 py-1.5 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold">
+                {song.code}
+                {song.order}
+              </span>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                {song.title}
+              </h1>
+            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={enterEditMode}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              수정
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              삭제
+            </Button>
+          </div>
+        </div>
+
+        {/* 삭제 확인 다이얼로그 */}
+        {showDeleteConfirm && (
+          <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-red-800 dark:text-red-200">
+                    정말로 이 찬양을 삭제하시겠습니까?
+                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                    삭제된 찬양은 복구할 수 없습니다.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                    취소
+                  </Button>
+                  <Button
+                    onClick={handleDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    삭제
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 슬라이드 목록 */}
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+              슬라이드 ({slides.length}개)
+            </h2>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {slides.map((slide) => (
+              <div
+                key={slide.id}
+                className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
+              >
+                <div className="flex items-start gap-4">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold flex items-center justify-center">
+                    {slide.slide_number}
+                  </span>
+                  <div className="flex-1">
+                    {slide.slide_number === 1 && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium mb-2 inline-block">
+                        제목
+                      </span>
+                    )}
+                    <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                      {slide.content}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* 목록으로 돌아가기 */}
+        <div className="flex justify-start">
+          <Button variant="secondary" onClick={() => navigate('/songs')}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            목록으로
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // 수정 모드
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 등록</h1>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">새로운 찬양과 가사를 등록합니다.</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          찬양 수정
+        </h1>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">찬양 정보와 가사를 수정합니다.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -267,7 +510,7 @@ export function SongCreatePage(): JSX.Element {
                       id="order"
                       type="number"
                       min={1}
-                      placeholder="자동 계산됨"
+                      placeholder="순서 입력"
                       error={!!errors.order || !!orderDuplicateError}
                       value={field.value ?? ''}
                       onChange={(e) => {
@@ -317,13 +560,13 @@ export function SongCreatePage(): JSX.Element {
                   </Button>
                 </div>
 
-                {tags.length === 0 ? (
+                {allTags.length === 0 ? (
                   <p className="text-sm text-slate-400 italic">
                     등록된 태그가 없습니다. 위 입력창에서 새 태그를 생성해주세요.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
+                    {allTags.map((tag) => (
                       <button
                         key={tag.id}
                         type="button"
@@ -424,10 +667,10 @@ export function SongCreatePage(): JSX.Element {
           </CardContent>
         </Card>
 
-        {/* 저장 버튼 */}
+        {/* 버튼 */}
         <div className="flex justify-end gap-3">
           {submitError && <p className="text-sm text-red-600 dark:text-red-400 self-center">{submitError}</p>}
-          <Button type="button" variant="secondary" onClick={() => navigate('/songs')}>
+          <Button type="button" variant="secondary" onClick={cancelEdit}>
             취소
           </Button>
           <Button type="submit" disabled={isSubmitting || !canSubmit}>

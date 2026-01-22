@@ -50,8 +50,11 @@ export interface SlideApi {
 
 export interface PresentationApi {
   getSlides: (songCodes: string[]) => Promise<PresentationSlide[]>
-  open: () => Promise<void>
+  open: (slides: PresentationSlide[]) => Promise<void>
   close: () => Promise<void>
+  setFullscreen: (fullscreen: boolean) => Promise<void>
+  isFullscreen: () => Promise<boolean>
+  onUpdateSlides: (callback: (slides: PresentationSlide[]) => void) => () => void
 }
 
 export interface TagApi {
@@ -70,6 +73,11 @@ export interface SongTagApi {
   setTagsForSong: (songId: number, tagIds: number[]) => Promise<void>
 }
 
+export interface ImageApi {
+  select: () => Promise<string | null>
+  delete: (imagePath: string) => Promise<boolean>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -78,5 +86,6 @@ declare global {
     presentationApi: PresentationApi
     tagApi: TagApi
     songTagApi: SongTagApi
+    imageApi: ImageApi
   }
 }

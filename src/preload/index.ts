@@ -66,9 +66,26 @@ const songTagApi = {
 const presentationApi = {
   getSlides: (songCodes: string[]) => ipcRenderer.invoke('presentation:getSlides', songCodes),
 
-  open: () => ipcRenderer.invoke('presentation:open'),
+  open: (slides: unknown[]) => ipcRenderer.invoke('presentation:open', slides),
 
-  close: () => ipcRenderer.invoke('presentation:close')
+  close: () => ipcRenderer.invoke('presentation:close'),
+
+  setFullscreen: (fullscreen: boolean) => ipcRenderer.invoke('presentation:setFullscreen', fullscreen),
+
+  isFullscreen: () => ipcRenderer.invoke('presentation:isFullscreen'),
+
+  // 슬라이드 데이터 수신 리스너
+  onUpdateSlides: (callback: (slides: unknown[]) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, slides: unknown[]) => callback(slides)
+    ipcRenderer.on('presentation:updateSlides', handler)
+    return () => ipcRenderer.removeListener('presentation:updateSlides', handler)
+  }
+}
+
+// Image API
+const imageApi = {
+  select: () => ipcRenderer.invoke('image:select'),
+  delete: (imagePath: string) => ipcRenderer.invoke('image:delete', imagePath)
 }
 
 // Expose APIs to renderer
@@ -80,6 +97,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('tagApi', tagApi)
     contextBridge.exposeInMainWorld('songTagApi', songTagApi)
     contextBridge.exposeInMainWorld('presentationApi', presentationApi)
+    contextBridge.exposeInMainWorld('imageApi', imageApi)
   } catch (error) {
     console.error(error)
   }
@@ -96,4 +114,6 @@ if (process.contextIsolated) {
   window.songTagApi = songTagApi
   // @ts-ignore
   window.presentationApi = presentationApi
+  // @ts-ignore
+  window.imageApi = imageApi
 }

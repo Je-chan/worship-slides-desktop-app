@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
 
@@ -19,6 +19,7 @@ interface Tag {
 }
 
 export function SongListPage(): JSX.Element {
+  const navigate = useNavigate()
   const [songs, setSongs] = useState<Song[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('group')
@@ -123,7 +124,13 @@ export function SongListPage(): JSX.Element {
     return groups
   }, [sortedSongs])
 
-  const groupCodes = Object.keys(groupedSongs).sort()
+  // 도레미파솔라시 순서로 정렬 (C, D, E, F, G, A, B)
+  const CODE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+  const groupCodes = Object.keys(groupedSongs).sort((a, b) => {
+    const aIndex = CODE_ORDER.indexOf(a.toUpperCase())
+    const bIndex = CODE_ORDER.indexOf(b.toUpperCase())
+    return aIndex - bIndex
+  })
 
   // 태그 선택 (아직 선택되지 않은 경우에만)
   const selectTag = (tagId: number) => {
@@ -351,7 +358,8 @@ export function SongListPage(): JSX.Element {
                         return (
                           <div
                             key={song.id}
-                            className={`px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors ${
+                            onClick={() => navigate(`/songs/${song.id}`)}
+                            className={`px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
                               index !== groupedSongs[code].length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''
                             }`}
                           >
@@ -397,7 +405,8 @@ export function SongListPage(): JSX.Element {
               return (
                 <div
                   key={song.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors"
+                  onClick={() => navigate(`/songs/${song.id}`)}
+                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     <span className="w-14 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold flex items-center justify-center shadow-sm">

@@ -24,7 +24,7 @@ export function RootLayout(): JSX.Element {
                 className="flex items-center gap-2 font-bold text-xl text-slate-800 dark:text-slate-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 <span className="text-2xl">🎤</span>
-                <span>Worship Slides</span>
+                <span>찬양 PPT</span>
               </Link>
 
               {/* Nav Links */}

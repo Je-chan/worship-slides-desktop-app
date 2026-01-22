@@ -3,7 +3,10 @@ import { RootLayout } from '@app/layouts/RootLayout'
 import { HomePage } from '@pages/home'
 import { SongListPage } from '@pages/song-list'
 import { SongCreatePage } from '@pages/song-create'
+import { SongDetailPage } from '@pages/song-detail'
+import { WorshipPage } from '@pages/worship'
 import { PresentationPage } from '@pages/presentation'
+import { SettingsPage } from '@pages/settings'
 
 const router = createHashRouter([
   {
@@ -21,6 +24,18 @@ const router = createHashRouter([
       {
         path: 'songs/create',
         element: <SongCreatePage />
+      },
+      {
+        path: 'songs/:id',
+        element: <SongDetailPage />
+      },
+      {
+        path: 'worship',
+        element: <WorshipPage />
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />
       }
     ]
   },
