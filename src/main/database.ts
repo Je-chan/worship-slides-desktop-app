@@ -341,3 +341,174 @@ export const getSlidesForPresentation = (songCodes: string[]): PresentationSlide
 
   return result
 }
+
+// ===== Backup/Restore =====
+
+export interface BackupData {
+  version: number
+  exportedAt: string
+  songs: Array<{
+    title: string
+    code: string
+    order: number
+    slides: Array<{ slideNumber: number; content: string }>
+    tags: string[]
+  }>
+  tags: string[]
+}
+
+export interface BackupSongData {
+  title: string
+  code: string
+  order: number
+  slides: Array<{ slideNumber: number; content: string }>
+  tags: string[]
+}
+
+export interface ConflictInfo {
+  type: 'song' | 'tag'
+  backupItem: BackupSongData | string
+  existingItem: Song | Tag | null
+  code?: string
+  order?: number
+}
+
+// 전체 데이터 백업용 내보내기
+export const exportAllData = (): BackupData => {
+  const songs = getAllSongs()
+  const tags = getAllTags()
+
+  const songData = songs.map((song) => {
+    const slides = getSlidesBySongId(song.id)
+    const songTags = getTagsBySongId(song.id)
+    return {
+      title: song.title,
+      code: song.code,
+      order: song.order,
+      slides: slides.map((s) => ({ slideNumber: s.slide_number, content: s.content })),
+      tags: songTags.map((t) => t.name)
+    }
+  })
+
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    songs: songData,
+    tags: tags.map((t) => t.name)
+  }
+}
+
+// 백업 데이터에서 충돌 항목 검출
+export const detectConflicts = (backupData: BackupData): ConflictInfo[] => {
+  const conflicts: ConflictInfo[] = []
+
+  // 찬양 충돌 검사
+  for (const songData of backupData.songs) {
+    const existing = getSongByCodeOrder(songData.code, songData.order)
+    if (existing) {
+      conflicts.push({
+        type: 'song',
+        backupItem: songData,
+        existingItem: existing,
+        code: songData.code,
+        order: songData.order
+      })
+    }
+  }
+
+  return conflicts
+}
+
+// 단일 찬양 가져오기 (충돌 해결 전략 적용)
+export const importSong = (
+  songData: BackupSongData,
+  strategy: 'skip' | 'overwrite' | 'newCode'
+): { success: boolean; newCode?: string; newOrder?: number } => {
+  const db = getDb()
+  const existing = getSongByCodeOrder(songData.code, songData.order)
+
+  if (existing) {
+    switch (strategy) {
+      case 'skip':
+        return { success: false }
+
+      case 'overwrite':
+        // 기존 슬라이드 삭제 후 새로 생성
+        deleteSlidesBySongId(existing.id)
+        updateSong(existing.id, songData.title, songData.code, songData.order)
+
+        // 슬라이드 생성
+        for (const slide of songData.slides) {
+          createSlide(existing.id, slide.slideNumber, slide.content)
+        }
+
+        // 태그 설정
+        const tagIds = songData.tags
+          .map((tagName) => {
+            let tag = getTagByName(tagName)
+            if (!tag) {
+              tag = createTag(tagName)
+            }
+            return tag.id
+          })
+        setTagsForSong(existing.id, tagIds)
+
+        return { success: true }
+
+      case 'newCode':
+        // 새로운 order 번호 찾기
+        const maxOrder = getMaxOrderByCode(songData.code)
+        const newOrder = maxOrder + 1
+
+        // 새 찬양 생성
+        const newSong = createSong(songData.title, songData.code, newOrder)
+
+        // 슬라이드 생성
+        for (const slide of songData.slides) {
+          createSlide(newSong.id, slide.slideNumber, slide.content)
+        }
+
+        // 태그 설정
+        const newTagIds = songData.tags
+          .map((tagName) => {
+            let tag = getTagByName(tagName)
+            if (!tag) {
+              tag = createTag(tagName)
+            }
+            return tag.id
+          })
+        setTagsForSong(newSong.id, newTagIds)
+
+        return { success: true, newCode: songData.code, newOrder }
+    }
+  } else {
+    // 충돌 없음 - 그냥 추가
+    const newSong = createSong(songData.title, songData.code, songData.order)
+
+    for (const slide of songData.slides) {
+      createSlide(newSong.id, slide.slideNumber, slide.content)
+    }
+
+    const tagIds = songData.tags
+      .map((tagName) => {
+        let tag = getTagByName(tagName)
+        if (!tag) {
+          tag = createTag(tagName)
+        }
+        return tag.id
+      })
+    setTagsForSong(newSong.id, tagIds)
+
+    return { success: true }
+  }
+}
+
+// 태그만 가져오기 (충돌 시 무시)
+export const importTags = (tagNames: string[]): void => {
+  for (const name of tagNames) {
+    const existing = getTagByName(name)
+    if (!existing) {
+      createTag(name)
+    }
+  }
+}

@@ -12,13 +12,39 @@ import {
   getBackgroundStyles,
   getOverlayStyles,
 } from '@shared/lib/slideStyles'
+import type { BackupSongData, ConflictInfo, BackupData } from 'src/preload/index.d'
 
 type StyleTab = 'title' | 'lyrics'
+type ConflictStrategy = 'skip' | 'overwrite' | 'newCode'
+
+interface ImportState {
+  isImporting: boolean
+  backupData: BackupData | null
+  conflicts: ConflictInfo[]
+  currentConflictIndex: number
+  applyToAll: boolean
+  applyToAllStrategy: ConflictStrategy | null
+  results: Array<{ code: string; order: number; status: string }>
+  completed: boolean
+}
 
 export function SettingsPage(): JSX.Element {
   const [styles, setStyles] = useState<SlideStyles>(loadStyles())
   const [activeTab, setActiveTab] = useState<StyleTab>('title')
   const [saved, setSaved] = useState(false)
+
+  // Backup state
+  const [isExporting, setIsExporting] = useState(false)
+  const [importState, setImportState] = useState<ImportState>({
+    isImporting: false,
+    backupData: null,
+    conflicts: [],
+    currentConflictIndex: 0,
+    applyToAll: false,
+    applyToAllStrategy: null,
+    results: [],
+    completed: false,
+  })
 
   // 스타일 변경 시 저장 표시 초기화
   useEffect(() => {
@@ -102,6 +128,203 @@ export function SettingsPage(): JSX.Element {
 
   // 미리보기 텍스트
   const previewText = activeTab === 'title' ? '찬양 제목' : '주님의 사랑이\n나를 감싸네'
+
+  // ===== Backup Functions =====
+
+  // 백업 내보내기
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const result = await window.backupApi.export()
+      if (result.success) {
+        alert(`백업이 완료되었습니다.\n${result.filePath}`)
+      } else if (!result.canceled) {
+        alert(`백업 실패: ${result.error}`)
+      }
+    } catch (error) {
+      alert(`백업 중 오류 발생: ${error}`)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // 백업 파일 읽기
+  const handleImportStart = async () => {
+    try {
+      const result = await window.backupApi.read()
+      if (result.success && result.backupData) {
+        setImportState({
+          isImporting: true,
+          backupData: result.backupData,
+          conflicts: result.conflicts || [],
+          currentConflictIndex: 0,
+          applyToAll: false,
+          applyToAllStrategy: null,
+          results: [],
+          completed: false,
+        })
+
+        // 충돌이 없으면 바로 가져오기 진행
+        if (!result.conflicts || result.conflicts.length === 0) {
+          await processImportWithoutConflicts(result.backupData)
+        }
+      } else if (!result.canceled) {
+        alert(result.error || '백업 파일을 읽을 수 없습니다.')
+      }
+    } catch (error) {
+      alert(`파일 읽기 중 오류 발생: ${error}`)
+    }
+  }
+
+  // 충돌 없이 가져오기
+  const processImportWithoutConflicts = async (backupData: BackupData) => {
+    const results: Array<{ code: string; order: number; status: string }> = []
+
+    // 태그 먼저 가져오기
+    await window.backupApi.importTags(backupData.tags)
+
+    // 모든 찬양 가져오기
+    for (const song of backupData.songs) {
+      const result = await window.backupApi.importSong(song, 'skip')
+      results.push({
+        code: song.code,
+        order: song.order,
+        status: result.success ? '추가됨' : '건너뜀',
+      })
+    }
+
+    setImportState((prev) => ({
+      ...prev,
+      results,
+      completed: true,
+    }))
+  }
+
+  // 충돌 해결 처리
+  const handleConflictResolution = async (strategy: ConflictStrategy) => {
+    const { backupData, conflicts, currentConflictIndex, applyToAll } = importState
+
+    if (!backupData) return
+
+    // 현재 충돌 항목 처리
+    const conflict = conflicts[currentConflictIndex]
+    const songData = conflict.backupItem as BackupSongData
+
+    const result = await window.backupApi.importSong(songData, strategy)
+
+    let status = ''
+    if (strategy === 'skip') {
+      status = '건너뜀'
+    } else if (strategy === 'overwrite') {
+      status = '덮어씀'
+    } else if (result.newOrder) {
+      status = `${songData.code}${result.newOrder}로 추가됨`
+    } else {
+      status = '추가됨'
+    }
+
+    const newResults = [
+      ...importState.results,
+      { code: songData.code, order: songData.order, status },
+    ]
+
+    // "모든 항목에 적용" 체크된 경우
+    if (applyToAll) {
+      // 나머지 충돌 항목들도 같은 전략으로 처리
+      for (let i = currentConflictIndex + 1; i < conflicts.length; i++) {
+        const nextConflict = conflicts[i]
+        const nextSongData = nextConflict.backupItem as BackupSongData
+        const nextResult = await window.backupApi.importSong(nextSongData, strategy)
+
+        let nextStatus = ''
+        if (strategy === 'skip') {
+          nextStatus = '건너뜀'
+        } else if (strategy === 'overwrite') {
+          nextStatus = '덮어씀'
+        } else if (nextResult.newOrder) {
+          nextStatus = `${nextSongData.code}${nextResult.newOrder}로 추가됨`
+        } else {
+          nextStatus = '추가됨'
+        }
+
+        newResults.push({ code: nextSongData.code, order: nextSongData.order, status: nextStatus })
+      }
+
+      // 충돌 없는 항목들도 가져오기
+      const conflictCodes = new Set(conflicts.map((c) => `${(c.backupItem as BackupSongData).code}${(c.backupItem as BackupSongData).order}`))
+      for (const song of backupData.songs) {
+        const key = `${song.code}${song.order}`
+        if (!conflictCodes.has(key)) {
+          const importResult = await window.backupApi.importSong(song, 'skip')
+          newResults.push({
+            code: song.code,
+            order: song.order,
+            status: importResult.success ? '추가됨' : '건너뜀',
+          })
+        }
+      }
+
+      // 태그 가져오기
+      await window.backupApi.importTags(backupData.tags)
+
+      setImportState((prev) => ({
+        ...prev,
+        results: newResults,
+        completed: true,
+      }))
+    } else {
+      // 다음 충돌로 이동
+      const nextIndex = currentConflictIndex + 1
+      if (nextIndex >= conflicts.length) {
+        // 모든 충돌 처리 완료 - 나머지 항목 가져오기
+        const conflictCodes = new Set(conflicts.map((c) => `${(c.backupItem as BackupSongData).code}${(c.backupItem as BackupSongData).order}`))
+        for (const song of backupData.songs) {
+          const key = `${song.code}${song.order}`
+          if (!conflictCodes.has(key)) {
+            const importResult = await window.backupApi.importSong(song, 'skip')
+            newResults.push({
+              code: song.code,
+              order: song.order,
+              status: importResult.success ? '추가됨' : '건너뜀',
+            })
+          }
+        }
+
+        // 태그 가져오기
+        await window.backupApi.importTags(backupData.tags)
+
+        setImportState((prev) => ({
+          ...prev,
+          results: newResults,
+          completed: true,
+        }))
+      } else {
+        setImportState((prev) => ({
+          ...prev,
+          results: newResults,
+          currentConflictIndex: nextIndex,
+        }))
+      }
+    }
+  }
+
+  // 가져오기 모달 닫기
+  const handleCloseImport = () => {
+    setImportState({
+      isImporting: false,
+      backupData: null,
+      conflicts: [],
+      currentConflictIndex: 0,
+      applyToAll: false,
+      applyToAllStrategy: null,
+      results: [],
+      completed: false,
+    })
+  }
+
+  // 현재 충돌 항목
+  const currentConflict = importState.conflicts[importState.currentConflictIndex]
+  const currentConflictSong = currentConflict?.backupItem as BackupSongData | undefined
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -572,6 +795,161 @@ export function SettingsPage(): JSX.Element {
           </Card>
         </div>
       </div>
+
+      {/* 데이터 백업/복원 */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100">데이터 백업/복원</h2>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            찬양 데이터를 백업하거나 다른 기기에서 내보낸 백업 파일을 가져올 수 있습니다.
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={handleExport} disabled={isExporting}>
+              {isExporting ? '내보내는 중...' : '백업 내보내기'}
+            </Button>
+            <Button variant="secondary" onClick={handleImportStart}>
+              백업 가져오기
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 가져오기 모달 */}
+      {importState.isImporting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+            {/* 헤더 */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                {importState.completed ? '가져오기 완료' : '백업 가져오기'}
+              </h3>
+            </div>
+
+            {/* 본문 */}
+            <div className="p-6">
+              {importState.completed ? (
+                /* 완료 화면 */
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-green-600 dark:text-green-400">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-lg font-medium">가져오기가 완료되었습니다.</span>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-xl">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 dark:bg-slate-700 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-slate-600 dark:text-slate-300">찬양</th>
+                          <th className="px-4 py-2 text-left text-slate-600 dark:text-slate-300">결과</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importState.results.map((result, idx) => (
+                          <tr key={idx} className="border-t border-slate-100 dark:border-slate-700">
+                            <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                              {result.code}{result.order}
+                            </td>
+                            <td className="px-4 py-2 text-slate-500 dark:text-slate-400">
+                              {result.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : importState.conflicts.length > 0 && currentConflictSong ? (
+                /* 충돌 해결 화면 */
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="font-medium">
+                      충돌 발생 ({importState.currentConflictIndex + 1}/{importState.conflicts.length})
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-3">
+                    <p className="text-slate-700 dark:text-slate-300">
+                      <span className="font-mono font-semibold text-primary-600 dark:text-primary-400">
+                        {currentConflictSong.code}{currentConflictSong.order}
+                      </span>
+                      이(가) 이미 존재합니다.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">기존</p>
+                        <p className="font-medium text-slate-700 dark:text-slate-300">
+                          {(currentConflict.existingItem as { title?: string })?.title || '제목 없음'}
+                        </p>
+                      </div>
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-primary-200 dark:border-primary-600">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">백업</p>
+                        <p className="font-medium text-slate-700 dark:text-slate-300">
+                          {currentConflictSong.title}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={importState.applyToAll}
+                      onChange={(e) => setImportState((prev) => ({ ...prev, applyToAll: e.target.checked }))}
+                      className="w-5 h-5 rounded border-slate-300"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      이후 모든 충돌에 이 선택 적용
+                    </span>
+                  </label>
+                </div>
+              ) : (
+                /* 로딩 화면 */
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {/* 푸터 */}
+            <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+              {importState.completed ? (
+                <div className="flex justify-end">
+                  <Button onClick={handleCloseImport}>닫기</Button>
+                </div>
+              ) : importState.conflicts.length > 0 ? (
+                <div className="flex justify-between">
+                  <Button variant="ghost" onClick={handleCloseImport}>
+                    취소
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={() => handleConflictResolution('skip')}>
+                      건너뛰기
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleConflictResolution('overwrite')}>
+                      덮어쓰기
+                    </Button>
+                    <Button onClick={() => handleConflictResolution('newCode')}>
+                      새 코드로 추가
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <Button variant="ghost" onClick={handleCloseImport}>
+                    취소
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

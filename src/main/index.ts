@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
-import { copyFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import {
   initDatabase,
@@ -26,7 +26,13 @@ import {
   removeTagFromSong,
   getTagsBySongId,
   getSongsByTagId,
-  setTagsForSong
+  setTagsForSong,
+  exportAllData,
+  detectConflicts,
+  importSong,
+  importTags,
+  type BackupData,
+  type BackupSongData
 } from './database'
 import { seedDatabase } from './seed'
 
@@ -287,6 +293,81 @@ app.whenReady().then(() => {
       console.error('이미지 삭제 실패:', error)
     }
     return false
+  })
+
+  // ===== Backup IPC Handlers =====
+
+  // 백업 내보내기
+  ipcMain.handle('backup:export', async () => {
+    const result = await dialog.showSaveDialog({
+      title: '백업 파일 저장',
+      defaultPath: `찬양PPT_백업_${new Date().toISOString().split('T')[0]}.json`,
+      filters: [{ name: 'JSON 파일', extensions: ['json'] }]
+    })
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, canceled: true }
+    }
+
+    try {
+      const backupData = exportAllData()
+      writeFileSync(result.filePath, JSON.stringify(backupData, null, 2), 'utf-8')
+      return { success: true, filePath: result.filePath }
+    } catch (error) {
+      console.error('백업 내보내기 실패:', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  // 백업 파일 읽기 및 충돌 검사
+  ipcMain.handle('backup:read', async () => {
+    const result = await dialog.showOpenDialog({
+      title: '백업 파일 선택',
+      filters: [{ name: 'JSON 파일', extensions: ['json'] }],
+      properties: ['openFile']
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, canceled: true }
+    }
+
+    try {
+      const content = readFileSync(result.filePaths[0], 'utf-8')
+      const backupData = JSON.parse(content) as BackupData
+
+      // 버전 확인
+      if (!backupData.version || !backupData.songs) {
+        return { success: false, error: '유효하지 않은 백업 파일입니다.' }
+      }
+
+      // 충돌 검사
+      const conflicts = detectConflicts(backupData)
+
+      return {
+        success: true,
+        backupData,
+        conflicts,
+        totalSongs: backupData.songs.length,
+        totalTags: backupData.tags.length
+      }
+    } catch (error) {
+      console.error('백업 파일 읽기 실패:', error)
+      return { success: false, error: '백업 파일을 읽을 수 없습니다.' }
+    }
+  })
+
+  // 단일 찬양 가져오기
+  ipcMain.handle(
+    'backup:importSong',
+    (_, songData: BackupSongData, strategy: 'skip' | 'overwrite' | 'newCode') => {
+      return importSong(songData, strategy)
+    }
+  )
+
+  // 태그 가져오기
+  ipcMain.handle('backup:importTags', (_, tagNames: string[]) => {
+    importTags(tagNames)
+    return { success: true }
   })
 
   createWindow()

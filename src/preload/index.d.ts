@@ -78,6 +78,63 @@ export interface ImageApi {
   delete: (imagePath: string) => Promise<boolean>
 }
 
+// Backup Types
+export interface BackupSongData {
+  title: string
+  code: string
+  order: number
+  slides: Array<{ slideNumber: number; content: string }>
+  tags: string[]
+}
+
+export interface BackupData {
+  version: number
+  exportedAt: string
+  songs: BackupSongData[]
+  tags: string[]
+}
+
+export interface ConflictInfo {
+  type: 'song' | 'tag'
+  backupItem: BackupSongData | string
+  existingItem: Song | Tag | null
+  code?: string
+  order?: number
+}
+
+export interface BackupExportResult {
+  success: boolean
+  canceled?: boolean
+  filePath?: string
+  error?: string
+}
+
+export interface BackupReadResult {
+  success: boolean
+  canceled?: boolean
+  error?: string
+  backupData?: BackupData
+  conflicts?: ConflictInfo[]
+  totalSongs?: number
+  totalTags?: number
+}
+
+export interface BackupImportSongResult {
+  success: boolean
+  newCode?: string
+  newOrder?: number
+}
+
+export interface BackupApi {
+  export: () => Promise<BackupExportResult>
+  read: () => Promise<BackupReadResult>
+  importSong: (
+    songData: BackupSongData,
+    strategy: 'skip' | 'overwrite' | 'newCode'
+  ) => Promise<BackupImportSongResult>
+  importTags: (tagNames: string[]) => Promise<{ success: boolean }>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -87,5 +144,6 @@ declare global {
     tagApi: TagApi
     songTagApi: SongTagApi
     imageApi: ImageApi
+    backupApi: BackupApi
   }
 }

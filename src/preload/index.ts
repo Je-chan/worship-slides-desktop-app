@@ -88,6 +88,15 @@ const imageApi = {
   delete: (imagePath: string) => ipcRenderer.invoke('image:delete', imagePath)
 }
 
+// Backup API
+const backupApi = {
+  export: () => ipcRenderer.invoke('backup:export'),
+  read: () => ipcRenderer.invoke('backup:read'),
+  importSong: (songData: unknown, strategy: 'skip' | 'overwrite' | 'newCode') =>
+    ipcRenderer.invoke('backup:importSong', songData, strategy),
+  importTags: (tagNames: string[]) => ipcRenderer.invoke('backup:importTags', tagNames)
+}
+
 // Expose APIs to renderer
 if (process.contextIsolated) {
   try {
@@ -98,6 +107,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('songTagApi', songTagApi)
     contextBridge.exposeInMainWorld('presentationApi', presentationApi)
     contextBridge.exposeInMainWorld('imageApi', imageApi)
+    contextBridge.exposeInMainWorld('backupApi', backupApi)
   } catch (error) {
     console.error(error)
   }
@@ -116,4 +126,6 @@ if (process.contextIsolated) {
   window.presentationApi = presentationApi
   // @ts-ignore
   window.imageApi = imageApi
+  // @ts-ignore
+  window.backupApi = backupApi
 }
