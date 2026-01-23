@@ -3,22 +3,61 @@ import {
   loadStyles,
   getTextStyles,
   getBackgroundStyles,
-  getOverlayStyles,
-  type SlideStyles
+  getOverlayStyles
 } from '@shared/lib/slideStyles'
 import type { PresentationSlide } from '@shared/types'
+
+// 스타일을 동기적으로 로드 (컴포넌트 외부에서 한 번만 실행)
+const initialStyles = loadStyles()
+
+// 이미지 프리로드 함수
+function preloadImage(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
+    img.src = src
+  })
+}
+
+// 배경 이미지 프리로드 (컴포넌트 마운트 시 실행)
+async function preloadBackgroundImages(): Promise<void> {
+  const imagesToPreload: string[] = []
+
+  if (initialStyles.title.background.image) {
+    imagesToPreload.push(initialStyles.title.background.image)
+  }
+  if (initialStyles.lyrics.background.image) {
+    imagesToPreload.push(initialStyles.lyrics.background.image)
+  }
+
+  if (imagesToPreload.length > 0) {
+    await Promise.all(imagesToPreload.map(preloadImage))
+  }
+}
 
 export function PresentationPage(): JSX.Element {
   const [slides, setSlides] = useState<PresentationSlide[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [numberInput, setNumberInput] = useState('')
   const [showInfo, setShowInfo] = useState(false)
-  const [styles, setStyles] = useState<SlideStyles | null>(null)
+  const [imagesLoaded, setImagesLoaded] = useState(false)
+  const styles = initialStyles // 항상 스타일이 존재함
   const numberInputTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // 스타일 로드
+  // 배경 이미지 프리로드
   useEffect(() => {
-    setStyles(loadStyles())
+    preloadBackgroundImages()
+      .then(() => setImagesLoaded(true))
+      .catch(() => setImagesLoaded(true)) // 실패해도 진행
+  }, [])
+
+  // body의 transition 효과 비활성화 (깜빡임 방지)
+  useEffect(() => {
+    document.body.style.transition = 'none'
+    return () => {
+      document.body.style.transition = ''
+    }
   }, [])
 
   // 슬라이드 데이터 수신
@@ -169,13 +208,15 @@ export function PresentationPage(): JSX.Element {
     }
   }, [numberInput])
 
-  // 슬라이드가 없는 경우
-  if (slides.length === 0) {
+  // 슬라이드가 없거나 이미지 로딩 중인 경우
+  if (slides.length === 0 || !imagesLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70 text-lg">슬라이드를 불러오는 중...</p>
+          <p className="text-white/70 text-lg">
+            {!imagesLoaded ? '배경 이미지 로딩 중...' : '슬라이드를 불러오는 중...'}
+          </p>
           <p className="text-white/40 text-sm mt-2">ESC를 눌러 종료</p>
         </div>
       </div>
@@ -186,19 +227,19 @@ export function PresentationPage(): JSX.Element {
 
   // 현재 슬라이드가 제목인지 가사인지 판단 (slideNumber === 1이면 제목)
   const isTitle = currentSlide.slideNumber === 1
-  const currentStyle = styles ? (isTitle ? styles.title : styles.lyrics) : null
+  const currentStyle = isTitle ? styles.title : styles.lyrics
 
   // 배경 스타일
-  const backgroundStyle = currentStyle ? getBackgroundStyles(currentStyle.background) : { backgroundColor: '#000000' }
-  const overlayStyle = currentStyle ? getOverlayStyles(currentStyle.background) : null
+  const backgroundStyle = getBackgroundStyles(currentStyle.background)
+  const overlayStyle = getOverlayStyles(currentStyle.background)
 
   // 텍스트 스타일
-  const textStyle = currentStyle ? getTextStyles(currentStyle.text) : {}
+  const textStyle = getTextStyles(currentStyle.text)
 
-  // 트랜지션 스타일
-  const transitionStyle = styles ? {
-    transition: styles.transition === 'none' ? 'none' : `opacity ${styles.transitionDuration}ms ease-in-out`
-  } : {}
+  // 트랜지션 스타일 (현재 미사용 - opacity 기반 전환은 별도 구현 필요)
+  // const transitionStyle = styles ? {
+  //   transition: styles.transition === 'none' ? 'none' : `opacity ${styles.transitionDuration}ms ease-in-out`
+  // } : {}
 
   return (
     <div className="min-h-screen flex flex-col select-none cursor-none relative" style={backgroundStyle}>
@@ -208,7 +249,7 @@ export function PresentationPage(): JSX.Element {
       )}
 
       {/* 메인 슬라이드 영역 */}
-      <div className="flex-1 flex items-center justify-center p-8 relative z-10" style={transitionStyle}>
+      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
         <div className="w-full">
           <p
             className="whitespace-pre-wrap"

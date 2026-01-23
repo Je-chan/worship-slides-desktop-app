@@ -168,7 +168,7 @@ export function WorshipPage(): JSX.Element {
 
           <Button
             onClick={handleStartPresentation}
-            disabled={isLoading || slides.length === 0}
+            disabled={isLoading || slides.length === 0 || notFoundCodes.length > 0}
           >
             <PlayCircle className="w-4 h-4" />
             {isLoading ? '불러오는 중...' : '슬라이드 쇼 시작'}
