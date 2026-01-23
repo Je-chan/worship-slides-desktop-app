@@ -4,6 +4,7 @@ import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react
 import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
 import type { Song, Tag } from '@shared/types'
+import { ALLOWED_CODES } from '@features/song-create/model'
 
 type ViewMode = 'list' | 'group'
 type SortBy = 'title' | 'code'
@@ -115,10 +116,9 @@ export function SongListPage(): JSX.Element {
   }, [sortedSongs])
 
   // 도레미파솔라시 순서로 정렬 (C, D, E, F, G, A, B)
-  const CODE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
   const groupCodes = Object.keys(groupedSongs).sort((a, b) => {
-    const aIndex = CODE_ORDER.indexOf(a.toUpperCase())
-    const bIndex = CODE_ORDER.indexOf(b.toUpperCase())
+    const aIndex = ALLOWED_CODES.indexOf(a.toUpperCase() as typeof ALLOWED_CODES[number])
+    const bIndex = ALLOWED_CODES.indexOf(b.toUpperCase() as typeof ALLOWED_CODES[number])
     return aIndex - bIndex
   })
 
