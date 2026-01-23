@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardContent, Label } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, NumberStepper } from '@shared/ui'
 import type { SlideStyles } from '@shared/lib/slideStyles'
 
 interface TransitionSettingsProps {
@@ -41,20 +41,14 @@ export function TransitionSettings({
         {transition !== 'none' && (
           <div className="space-y-2">
             <Label>전환 속도</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="100"
-                max="1000"
-                step="50"
-                value={transitionDuration}
-                onChange={(e) => onDurationChange(parseInt(e.target.value))}
-                className="flex-1"
-              />
-              <span className="w-16 text-sm text-slate-600 dark:text-slate-400">
-                {transitionDuration}ms
-              </span>
-            </div>
+            <NumberStepper
+              value={transitionDuration}
+              onChange={onDurationChange}
+              min={100}
+              max={1000}
+              step={50}
+              unit="ms"
+            />
           </div>
         )}
       </CardContent>

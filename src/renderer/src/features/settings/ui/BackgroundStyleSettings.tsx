@@ -1,5 +1,5 @@
 import { X, ImagePlus } from 'lucide-react'
-import { Card, CardHeader, CardContent, Label, Input } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, Input, NumberStepper } from '@shared/ui'
 import type { SlideTypeStyle } from '@shared/lib/slideStyles'
 
 interface BackgroundStyleSettingsProps {
@@ -160,19 +160,14 @@ export function BackgroundStyleSettings({
               <>
                 <div className="space-y-2">
                   <Label>오버레이 투명도</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={style.background.imageOverlay}
-                      onChange={(e) => onUpdate('imageOverlay', parseInt(e.target.value))}
-                      className="flex-1"
-                    />
-                    <span className="w-12 text-sm text-slate-600 dark:text-slate-400">
-                      {style.background.imageOverlay}%
-                    </span>
-                  </div>
+                  <NumberStepper
+                    value={style.background.imageOverlay}
+                    onChange={(v) => onUpdate('imageOverlay', v)}
+                    min={0}
+                    max={100}
+                    step={5}
+                    unit="%"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>오버레이 색상</Label>

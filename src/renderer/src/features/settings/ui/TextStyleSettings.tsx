@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardContent, Label, Input } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, Input, NumberStepper } from '@shared/ui'
 import type { SlideTypeStyle } from '@shared/lib/slideStyles'
 import { AVAILABLE_FONTS, FONT_WEIGHTS } from '@shared/lib/slideStyles'
 
@@ -37,19 +37,14 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>폰트 크기</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="24"
-                max="120"
-                value={style.text.fontSize}
-                onChange={(e) => onUpdate('fontSize', parseInt(e.target.value))}
-                className="flex-1"
-              />
-              <span className="w-12 text-sm text-slate-600 dark:text-slate-400">
-                {style.text.fontSize}px
-              </span>
-            </div>
+            <NumberStepper
+              value={style.text.fontSize}
+              onChange={(v) => onUpdate('fontSize', v)}
+              min={24}
+              max={120}
+              step={1}
+              unit="px"
+            />
           </div>
           <div className="space-y-2">
             <Label>폰트 굵기</Label>
@@ -108,20 +103,13 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
         {/* 줄 간격 */}
         <div className="space-y-2">
           <Label>줄 간격</Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="1"
-              max="2.5"
-              step="0.1"
-              value={style.text.lineHeight}
-              onChange={(e) => onUpdate('lineHeight', parseFloat(e.target.value))}
-              className="flex-1"
-            />
-            <span className="w-12 text-sm text-slate-600 dark:text-slate-400">
-              {style.text.lineHeight.toFixed(1)}
-            </span>
-          </div>
+          <NumberStepper
+            value={style.text.lineHeight}
+            onChange={(v) => onUpdate('lineHeight', v)}
+            min={1}
+            max={2.5}
+            step={0.1}
+          />
         </div>
 
         {/* 텍스트 효과 */}
