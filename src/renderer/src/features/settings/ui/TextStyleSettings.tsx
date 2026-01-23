@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardContent, Label, Input, NumberStepper } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, Input, NumberStepper, Select, SegmentedControl, Switch } from '@shared/ui'
 import type { SlideTypeStyle } from '@shared/lib/slideStyles'
 import { AVAILABLE_FONTS, FONT_WEIGHTS } from '@shared/lib/slideStyles'
 
@@ -10,7 +10,23 @@ interface TextStyleSettingsProps {
   ) => void
 }
 
+const ALIGN_OPTIONS = [
+  { value: 'left' as const, label: '왼쪽' },
+  { value: 'center' as const, label: '가운데' },
+  { value: 'right' as const, label: '오른쪽' }
+]
+
 export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): JSX.Element {
+  const fontOptions = AVAILABLE_FONTS.map((font) => ({
+    value: font.value,
+    label: font.name
+  }))
+
+  const weightOptions = FONT_WEIGHTS.map((weight) => ({
+    value: weight.value,
+    label: weight.name
+  }))
+
   return (
     <Card>
       <CardHeader>
@@ -20,17 +36,11 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
         {/* 폰트 */}
         <div className="space-y-2">
           <Label>폰트</Label>
-          <select
+          <Select
             value={style.text.fontFamily}
-            onChange={(e) => onUpdate('fontFamily', e.target.value)}
-            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 dark:text-slate-100"
-          >
-            {AVAILABLE_FONTS.map((font) => (
-              <option key={font.value} value={font.value}>
-                {font.name}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => onUpdate('fontFamily', value)}
+            options={fontOptions}
+          />
         </div>
 
         {/* 폰트 크기 & 굵기 */}
@@ -48,17 +58,11 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
           </div>
           <div className="space-y-2">
             <Label>폰트 굵기</Label>
-            <select
+            <Select
               value={style.text.fontWeight}
-              onChange={(e) => onUpdate('fontWeight', e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 dark:text-slate-100"
-            >
-              {FONT_WEIGHTS.map((weight) => (
-                <option key={weight.value} value={weight.value}>
-                  {weight.name}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => onUpdate('fontWeight', value)}
+              options={weightOptions}
+            />
           </div>
         </div>
 
@@ -83,21 +87,11 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
         {/* 정렬 */}
         <div className="space-y-2">
           <Label>정렬</Label>
-          <div className="flex gap-2">
-            {(['left', 'center', 'right'] as const).map((align) => (
-              <button
-                key={align}
-                onClick={() => onUpdate('textAlign', align)}
-                className={`flex-1 py-2 rounded-lg border transition-all ${
-                  style.text.textAlign === align
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
-                }`}
-              >
-                {align === 'left' ? '왼쪽' : align === 'center' ? '가운데' : '오른쪽'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={style.text.textAlign}
+            onChange={(value) => onUpdate('textAlign', value)}
+            options={ALIGN_OPTIONS}
+          />
         </div>
 
         {/* 줄 간격 */}
@@ -115,15 +109,12 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
         {/* 텍스트 효과 */}
         <div className="space-y-3">
           <Label>텍스트 효과</Label>
-          <div className="space-y-2">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={style.text.textShadow}
-                onChange={(e) => onUpdate('textShadow', e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300"
-              />
-              <span className="text-sm text-slate-700 dark:text-slate-300">그림자</span>
+          <div className="space-y-3">
+            <Switch
+              checked={style.text.textShadow}
+              onChange={(checked) => onUpdate('textShadow', checked)}
+              label="그림자"
+            >
               {style.text.textShadow && (
                 <input
                   type="color"
@@ -132,15 +123,12 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
                   className="w-8 h-8 rounded cursor-pointer"
                 />
               )}
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={style.text.textStroke}
-                onChange={(e) => onUpdate('textStroke', e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300"
-              />
-              <span className="text-sm text-slate-700 dark:text-slate-300">외곽선</span>
+            </Switch>
+            <Switch
+              checked={style.text.textStroke}
+              onChange={(checked) => onUpdate('textStroke', checked)}
+              label="외곽선"
+            >
               {style.text.textStroke && (
                 <input
                   type="color"
@@ -149,7 +137,7 @@ export function TextStyleSettings({ style, onUpdate }: TextStyleSettingsProps): 
                   className="w-8 h-8 rounded cursor-pointer"
                 />
               )}
-            </label>
+            </Switch>
           </div>
         </div>
       </CardContent>

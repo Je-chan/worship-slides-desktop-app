@@ -1,5 +1,5 @@
 import { X, ImagePlus } from 'lucide-react'
-import { Card, CardHeader, CardContent, Label, Input, NumberStepper } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, Input, NumberStepper, SegmentedControl, IconButton, Button } from '@shared/ui'
 import type { SlideTypeStyle } from '@shared/lib/slideStyles'
 
 interface BackgroundStyleSettingsProps {
@@ -11,6 +11,19 @@ interface BackgroundStyleSettingsProps {
   onSelectImage: () => void
   onRemoveImage: () => void
 }
+
+const BACKGROUND_TYPE_OPTIONS = [
+  { value: 'color' as const, label: '단색' },
+  { value: 'gradient' as const, label: '그라데이션' },
+  { value: 'image' as const, label: '이미지' }
+]
+
+const GRADIENT_DIRECTION_OPTIONS = [
+  { value: 'to-b' as const, label: '↓' },
+  { value: 'to-r' as const, label: '→' },
+  { value: 'to-br' as const, label: '↘' },
+  { value: 'to-bl' as const, label: '↙' }
+]
 
 export function BackgroundStyleSettings({
   style,
@@ -27,21 +40,11 @@ export function BackgroundStyleSettings({
         {/* 배경 타입 */}
         <div className="space-y-2">
           <Label>배경 타입</Label>
-          <div className="flex gap-2">
-            {(['color', 'gradient', 'image'] as const).map((type) => (
-              <button
-                key={type}
-                onClick={() => onUpdate('type', type)}
-                className={`flex-1 py-2 rounded-lg border transition-all ${
-                  style.background.type === type
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
-                }`}
-              >
-                {type === 'color' ? '단색' : type === 'gradient' ? '그라데이션' : '이미지'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={style.background.type}
+            onChange={(value) => onUpdate('type', value)}
+            options={BACKGROUND_TYPE_OPTIONS}
+          />
         </div>
 
         {/* 단색 배경 */}
@@ -103,26 +106,11 @@ export function BackgroundStyleSettings({
             </div>
             <div className="space-y-2">
               <Label>방향</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {([
-                  { value: 'to-b', label: '↓' },
-                  { value: 'to-r', label: '→' },
-                  { value: 'to-br', label: '↘' },
-                  { value: 'to-bl', label: '↙' },
-                ] as const).map((dir) => (
-                  <button
-                    key={dir.value}
-                    onClick={() => onUpdate('gradientDirection', dir.value)}
-                    className={`py-2 rounded-lg border text-lg transition-all ${
-                      style.background.gradientDirection === dir.value
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
-                    }`}
-                  >
-                    {dir.label}
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                value={style.background.gradientDirection}
+                onChange={(value) => onUpdate('gradientDirection', value)}
+                options={GRADIENT_DIRECTION_OPTIONS}
+              />
             </div>
           </>
         )}
@@ -139,21 +127,24 @@ export function BackgroundStyleSettings({
                     alt="배경"
                     className="w-full h-32 object-cover rounded-xl"
                   />
-                  <button
+                  <IconButton
+                    icon={<X className="w-4 h-4" />}
+                    variant="danger"
+                    size="sm"
+                    label="이미지 삭제"
                     onClick={onRemoveImage}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                    className="absolute top-2 right-2"
+                  />
                 </div>
               ) : (
-                <button
+                <Button
+                  variant="outline"
                   onClick={onSelectImage}
-                  className="w-full py-8 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:border-primary-400 hover:text-primary-500 transition-colors"
+                  className="w-full py-8 border-dashed"
                 >
                   <ImagePlus className="w-8 h-8 mx-auto mb-2" />
                   이미지 선택
-                </button>
+                </Button>
               )}
             </div>
             {style.background.image && (

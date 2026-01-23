@@ -1,7 +1,7 @@
 import { Button as HeadlessButton } from '@headlessui/react'
 import { ComponentPropsWithoutRef, forwardRef } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
@@ -25,6 +25,13 @@ const variantStyles: Record<ButtonVariant, string> = {
     dark:shadow-slate-900/30
     dark:hover:bg-slate-700 dark:hover:border-slate-600
     dark:active:bg-slate-600
+  `,
+  outline: `
+    bg-transparent text-slate-500 border-2 border-slate-300
+    hover:border-primary-400 hover:text-primary-500
+    active:border-primary-500 active:text-primary-600
+    dark:border-slate-600 dark:text-slate-400
+    dark:hover:border-primary-500 dark:hover:text-primary-400
   `,
   ghost: `
     bg-transparent text-slate-600

@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useTheme } from '@shared/lib'
-import { ErrorBoundary } from '@shared/ui'
+import { ErrorBoundary, IconButton } from '@shared/ui'
 import { Music, PenLine, Moon, Sun, PlayCircle, Sparkles, Settings } from 'lucide-react'
 
 const navItems = [
@@ -61,17 +61,12 @@ export function RootLayout(): JSX.Element {
             </div>
 
             {/* Theme Toggle */}
-            <button
+            <IconButton
+              icon={theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              variant="ghost"
+              label="테마 변경"
               onClick={toggleTheme}
-              className="p-2.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/50 transition-all duration-200"
-              aria-label="테마 변경"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
-            </button>
+            />
           </div>
         </div>
       </nav>

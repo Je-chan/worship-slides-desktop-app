@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardContent, Label, NumberStepper } from '@shared/ui'
+import { Card, CardHeader, CardContent, Label, NumberStepper, SegmentedControl } from '@shared/ui'
 import type { SlideStyles } from '@shared/lib/slideStyles'
 
 interface TransitionSettingsProps {
@@ -7,6 +7,12 @@ interface TransitionSettingsProps {
   onTransitionChange: (value: SlideStyles['transition']) => void
   onDurationChange: (value: number) => void
 }
+
+const TRANSITION_OPTIONS = [
+  { value: 'none' as const, label: '없음' },
+  { value: 'fade' as const, label: '페이드' },
+  { value: 'slide' as const, label: '슬라이드' }
+]
 
 export function TransitionSettings({
   transition,
@@ -22,21 +28,11 @@ export function TransitionSettings({
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label>전환 효과</Label>
-          <div className="flex gap-2">
-            {(['none', 'fade', 'slide'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => onTransitionChange(t)}
-                className={`flex-1 py-2 rounded-lg border transition-all ${
-                  transition === t
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
-                }`}
-              >
-                {t === 'none' ? '없음' : t === 'fade' ? '페이드' : '슬라이드'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={transition}
+            onChange={onTransitionChange}
+            options={TRANSITION_OPTIONS}
+          />
         </div>
         {transition !== 'none' && (
           <div className="space-y-2">
