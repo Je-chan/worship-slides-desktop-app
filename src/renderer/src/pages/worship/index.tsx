@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { PlayCircle } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardContent, Label } from '@shared/ui'
-import type { PresentationSlide, ParsedSongCodeCode } from '@shared/types'
+import type { PresentationSlide, ParsedSongCode } from '@shared/types'
 
 export function WorshipPage(): JSX.Element {
   const [songCodesInput, setSongCodesInput] = useState('')
