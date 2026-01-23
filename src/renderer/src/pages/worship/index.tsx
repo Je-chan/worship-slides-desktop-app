@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { PlayCircle } from 'lucide-react'
-import { Button, Input, Card, CardHeader, CardContent, Label, PageHeader, CodeBadge } from '@shared/ui'
+import { Button, Input, Card, CardHeader, CardContent, Label, PageHeader, CodeBadge, LoadingSpinner } from '@shared/ui'
 import type { PresentationSlide, ParsedSongCode } from '@shared/types'
 
 export function WorshipPage(): JSX.Element {
@@ -9,6 +9,7 @@ export function WorshipPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notFoundCodes, setNotFoundCodes] = useState<string[]>([])
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // 입력된 코드를 파싱하여 배열로 변환
   const parsedCodes = useMemo((): ParsedSongCode[] => {
@@ -34,44 +35,58 @@ export function WorshipPage(): JSX.Element {
     return result
   }, [songCodesInput])
 
-  // 슬라이드 가져오기
-  const handleLoadSlides = async () => {
+  // 코드가 변경되면 자동으로 슬라이드 로드 (디바운스 적용)
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+
     if (parsedCodes.length === 0) {
-      setError('찬양 코드를 입력해주세요.')
+      setSlides([])
+      setError(null)
+      setNotFoundCodes([])
       return
     }
 
-    setIsLoading(true)
-    setError(null)
-    setNotFoundCodes([])
+    debounceRef.current = setTimeout(async () => {
+      setIsLoading(true)
+      setError(null)
+      setNotFoundCodes([])
 
-    try {
-      const songCodes = parsedCodes.map((p) => p.display)
-      const loadedSlides = await window.presentationApi.getSlides(songCodes)
+      try {
+        const songCodes = parsedCodes.map((p) => p.display)
+        const loadedSlides = await window.presentationApi.getSlides(songCodes)
 
-      if (loadedSlides.length === 0) {
-        setError('입력한 찬양을 찾을 수 없습니다.')
-        setSlides([])
-        return
+        if (loadedSlides.length === 0) {
+          setError('입력한 찬양을 찾을 수 없습니다.')
+          setSlides([])
+          return
+        }
+
+        // 찾지 못한 코드 확인
+        const foundCodes = new Set(loadedSlides.map((s) => `${s.songCode}${s.songOrder}`))
+        const missing = songCodes.filter((code) => !foundCodes.has(code.toUpperCase()))
+        setNotFoundCodes(missing)
+
+        setSlides(loadedSlides)
+      } catch {
+        setError('슬라이드를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
       }
+    }, 500) // 500ms 디바운스
 
-      // 찾지 못한 코드 확인
-      const foundCodes = new Set(loadedSlides.map((s) => `${s.songCode}${s.songOrder}`))
-      const missing = songCodes.filter((code) => !foundCodes.has(code.toUpperCase()))
-      setNotFoundCodes(missing)
-
-      setSlides(loadedSlides)
-    } catch {
-      setError('슬라이드를 불러오는데 실패했습니다.')
-    } finally {
-      setIsLoading(false)
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
     }
-  }
+  }, [parsedCodes])
 
   // 슬라이드 쇼 시작
   const handleStartPresentation = async () => {
     if (slides.length === 0) {
-      setError('먼저 슬라이드를 불러와주세요.')
+      setError('슬라이드가 없습니다. 찬양 코드를 확인해주세요.')
       return
     }
 
@@ -128,11 +143,6 @@ export function WorshipPage(): JSX.Element {
               value={songCodesInput}
               onChange={(e) => setSongCodesInput(e.target.value)}
               placeholder="C1, C2, A3, A4"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleLoadSlides()
-                }
-              }}
             />
             <p className="text-xs text-slate-400">쉼표(,) 또는 공백으로 구분</p>
           </div>
@@ -156,22 +166,21 @@ export function WorshipPage(): JSX.Element {
             </p>
           )}
 
-          <div className="flex gap-3">
-            <Button onClick={handleLoadSlides} disabled={isLoading || parsedCodes.length === 0}>
-              {isLoading ? '불러오는 중...' : '슬라이드 불러오기'}
-            </Button>
-            {slides.length > 0 && (
-              <Button onClick={handleStartPresentation} variant="secondary">
-                <PlayCircle className="w-4 h-4" />
-                슬라이드 쇼 시작
-              </Button>
-            )}
-          </div>
+          <Button
+            onClick={handleStartPresentation}
+            disabled={isLoading || slides.length === 0}
+          >
+            <PlayCircle className="w-4 h-4" />
+            {isLoading ? '불러오는 중...' : '슬라이드 쇼 시작'}
+          </Button>
         </CardContent>
       </Card>
 
+      {/* 로딩 상태 */}
+      {isLoading && <LoadingSpinner message="슬라이드를 불러오는 중..." />}
+
       {/* 슬라이드 미리보기 */}
-      {slides.length > 0 && (
+      {!isLoading && slides.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -185,9 +194,7 @@ export function WorshipPage(): JSX.Element {
             {groupedSlides.map((group, groupIndex) => (
               <div key={groupIndex} className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold shadow-sm">
-                    {group.songCode}{group.songOrder}
-                  </span>
+                  <CodeBadge code={group.songCode} order={group.songOrder} />
                   <span className="font-medium text-slate-800 dark:text-slate-200">{group.songTitle}</span>
                   <span className="text-sm text-slate-400">({group.slides.length}개)</span>
                 </div>
