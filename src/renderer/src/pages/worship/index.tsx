@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { PlayCircle } from 'lucide-react'
-import { Button, Input, Card, CardHeader, CardContent, Label } from '@shared/ui'
+import { Button, Input, Card, CardHeader, CardContent, Label, PageHeader, CodeBadge } from '@shared/ui'
 import type { PresentationSlide, ParsedSongCode } from '@shared/types'
 
 export function WorshipPage(): JSX.Element {
@@ -106,17 +106,11 @@ export function WorshipPage(): JSX.Element {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
-          <PlayCircle className="w-6 h-6 text-primary-600 dark:text-primary-300" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">예배 준비</h1>
-          <p className="mt-0.5 text-slate-500 dark:text-slate-400">
-            오늘 예배에 사용할 찬양 순서를 입력하고 슬라이드를 시작하세요.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={PlayCircle}
+        title="예배 준비"
+        description="오늘 예배에 사용할 찬양 순서를 입력하고 슬라이드를 시작하세요."
+      />
 
       {/* 찬양 코드 입력 */}
       <Card>
@@ -147,12 +141,7 @@ export function WorshipPage(): JSX.Element {
           {parsedCodes.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {parsedCodes.map((code, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-semibold shadow-sm"
-                >
-                  {code.display}
-                </span>
+                <CodeBadge key={index} code={code.code} order={code.order} />
               ))}
             </div>
           )}

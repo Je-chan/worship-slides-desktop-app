@@ -12,7 +12,12 @@ import {
   Card,
   CardHeader,
   CardContent,
-  FormField
+  FormField,
+  LoadingSpinner,
+  CodeBadge,
+  TagBadge,
+  PageHeader,
+  SlidePreviewCard
 } from '@shared/ui'
 import { useToast } from '@shared/lib'
 import { useTags, usePreviewScroll } from '@shared/hooks'
@@ -245,14 +250,7 @@ export function SongDetailPage(): JSX.Element {
   const canSubmit = hasLyrics && !orderDuplicateError
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 dark:text-slate-400">로딩 중...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!song) {
@@ -271,9 +269,7 @@ export function SongDetailPage(): JSX.Element {
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold shadow-sm">
-                  {song.code}{song.order}
-                </span>
+                <CodeBadge code={song.code} order={song.order} />
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   {song.title}
                 </h1>
@@ -281,12 +277,7 @@ export function SongDetailPage(): JSX.Element {
               {songTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {songTags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-600 border border-slate-200/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50"
-                    >
-                      {tag.name}
-                    </span>
+                    <TagBadge key={tag.id} name={tag.name} />
                   ))}
                 </div>
               )}
@@ -387,15 +378,7 @@ export function SongDetailPage(): JSX.Element {
   // 수정 모드
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
-          <Pencil className="w-6 h-6 text-primary-600 dark:text-primary-300" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 수정</h1>
-          <p className="mt-0.5 text-slate-500 dark:text-slate-400">찬양 정보와 가사를 수정합니다.</p>
-        </div>
-      </div>
+      <PageHeader icon={Pencil} title="찬양 수정" description="찬양 정보와 가사를 수정합니다." />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* 찬양 정보 */}
@@ -514,18 +497,13 @@ export function SongDetailPage(): JSX.Element {
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {allTags.map((tag) => (
-                      <button
+                      <TagBadge
                         key={tag.id}
-                        type="button"
-                        onClick={() => toggleTag(tag.id)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
-                          selectedTagIds.includes(tag.id)
-                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-sm shadow-primary-600/30'
-                            : 'bg-slate-100/80 text-slate-600 border border-slate-200/50 hover:bg-slate-200/80 hover:text-slate-800 hover:border-slate-300/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50 dark:hover:bg-slate-600 dark:hover:text-slate-100'
-                        }`}
-                      >
-                        {tag.name}
-                      </button>
+                        name={tag.name}
+                        variant="toggle"
+                        isSelected={selectedTagIds.includes(tag.id)}
+                        onToggle={() => toggleTag(tag.id)}
+                      />
                     ))}
                   </div>
                 )}

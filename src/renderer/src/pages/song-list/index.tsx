@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
-import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
-import { Button, Input, Card, CardContent } from '@shared/ui'
+import { Plus, Search, ChevronDown, Music } from 'lucide-react'
+import { Button, Input, Card, CardContent, LoadingSpinner, EmptyState, TagBadge, CodeBadge } from '@shared/ui'
 import { useToast } from '@shared/lib'
 import type { Song, Tag } from '@shared/types'
 import { ALLOWED_CODES } from '@features/song-create'
@@ -147,14 +147,7 @@ export function SongListPage(): JSX.Element {
   }, [tags, selectedTagIds])
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 dark:text-slate-400">로딩 중...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
@@ -200,18 +193,12 @@ export function SongListPage(): JSX.Element {
             {selectedTags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {selectedTags.map((tag) => (
-                  <span
+                  <TagBadge
                     key={tag.id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary-600 text-white"
-                  >
-                    {tag.name}
-                    <button
-                      onClick={() => removeTag(tag.id)}
-                      className="ml-0.5 hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </span>
+                    name={tag.name}
+                    variant="selected"
+                    onRemove={() => removeTag(tag.id)}
+                  />
                 ))}
               </div>
             )}
@@ -306,12 +293,7 @@ export function SongListPage(): JSX.Element {
 
       {/* 검색 결과 없음 */}
       {filteredSongs.length === 0 && (
-        <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-            <Search className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
-          </div>
-          <p className="text-slate-500 dark:text-slate-400">검색 결과가 없습니다.</p>
-        </div>
+        <EmptyState icon={Search} message="검색 결과가 없습니다." />
       )}
 
       {/* 그룹 뷰 */}
@@ -359,12 +341,7 @@ export function SongListPage(): JSX.Element {
                             <div className="flex items-center gap-2">
                               {songTags.length > 0 ? (
                                 songTags.map((tag) => (
-                                  <span
-                                    key={tag.id}
-                                    className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                                  >
-                                    {tag.name}
-                                  </span>
+                                  <TagBadge key={tag.id} name={tag.name} />
                                 ))
                               ) : (
                                 <span className="text-xs text-slate-400 italic">태그 없음</span>
@@ -404,12 +381,7 @@ export function SongListPage(): JSX.Element {
                   <div className="flex items-center gap-2">
                     {songTags.length > 0 ? (
                       songTags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        >
-                          {tag.name}
-                        </span>
+                        <TagBadge key={tag.id} name={tag.name} />
                       ))
                     ) : (
                       <span className="text-xs text-slate-400 italic">태그 없음</span>

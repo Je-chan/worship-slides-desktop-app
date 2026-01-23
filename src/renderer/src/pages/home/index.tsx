@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { PlayCircle, Plus, Music, Settings, ArrowRight, Home } from 'lucide-react'
+import { PageHeader } from '@shared/ui'
 
 const menuItems = [
   {
@@ -32,16 +33,7 @@ const menuItems = [
 export function HomePage(): JSX.Element {
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
-          <Home className="w-6 h-6 text-primary-600 dark:text-primary-300" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">홈</h1>
-          <p className="mt-0.5 text-slate-500 dark:text-slate-400">원하는 기능을 선택하세요.</p>
-        </div>
-      </div>
+      <PageHeader icon={Home} title="홈" description="원하는 기능을 선택하세요." />
 
       {/* Menu Cards */}
       <div className="grid grid-cols-2 gap-4">
