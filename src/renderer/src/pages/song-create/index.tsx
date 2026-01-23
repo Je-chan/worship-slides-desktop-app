@@ -13,13 +13,9 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
+import type { Tag } from '@shared/types'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
 import { PenLine } from 'lucide-react'
-
-interface Tag {
-  id: number
-  name: string
-}
 
 export function SongCreatePage(): JSX.Element {
   const navigate = useNavigate()

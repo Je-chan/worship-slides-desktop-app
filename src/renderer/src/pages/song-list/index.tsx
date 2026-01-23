@@ -3,21 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
+import type { Song, Tag } from '@shared/types'
 
 type ViewMode = 'list' | 'group'
 type SortBy = 'title' | 'code'
-
-interface Song {
-  id: number
-  title: string
-  code: string
-  order: number
-}
-
-interface Tag {
-  id: number
-  name: string
-}
 
 export function SongListPage(): JSX.Element {
   const navigate = useNavigate()

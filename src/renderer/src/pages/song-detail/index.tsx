@@ -14,26 +14,8 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
+import type { Song, Slide, Tag } from '@shared/types'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
-
-interface Song {
-  id: number
-  title: string
-  code: string
-  order: number
-}
-
-interface Slide {
-  id: number
-  song_id: number
-  slide_number: number
-  content: string
-}
-
-interface Tag {
-  id: number
-  name: string
-}
 
 type ViewMode = 'view' | 'edit'
 

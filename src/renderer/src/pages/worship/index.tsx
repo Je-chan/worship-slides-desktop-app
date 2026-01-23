@@ -1,21 +1,7 @@
 import { useState, useMemo } from 'react'
 import { PlayCircle } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardContent, Label } from '@shared/ui'
-
-interface PresentationSlide {
-  songId: number
-  songTitle: string
-  songCode: string
-  songOrder: number
-  slideNumber: number
-  content: string
-}
-
-interface ParsedSong {
-  code: string
-  order: number
-  display: string
-}
+import type { PresentationSlide, ParsedSongCodeCode } from '@shared/types'
 
 export function WorshipPage(): JSX.Element {
   const [songCodesInput, setSongCodesInput] = useState('')
@@ -25,7 +11,7 @@ export function WorshipPage(): JSX.Element {
   const [notFoundCodes, setNotFoundCodes] = useState<string[]>([])
 
   // 입력된 코드를 파싱하여 배열로 변환
-  const parsedCodes = useMemo((): ParsedSong[] => {
+  const parsedCodes = useMemo((): ParsedSongCode[] => {
     if (!songCodesInput.trim()) return []
 
     // 쉼표, 공백, 줄바꿈으로 구분
@@ -34,7 +20,7 @@ export function WorshipPage(): JSX.Element {
       .map((c) => c.trim().toUpperCase())
       .filter((c) => c.length > 0)
 
-    const result: ParsedSong[] = []
+    const result: ParsedSongCode[] = []
     for (const code of codes) {
       const match = code.match(/^([A-G])(\d+)$/)
       if (match) {

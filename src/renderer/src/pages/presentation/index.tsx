@@ -6,15 +6,7 @@ import {
   getOverlayStyles,
   type SlideStyles
 } from '@shared/lib/slideStyles'
-
-interface PresentationSlide {
-  songId: number
-  songTitle: string
-  songCode: string
-  songOrder: number
-  slideNumber: number
-  content: string
-}
+import type { PresentationSlide } from '@shared/types'
 
 export function PresentationPage(): JSX.Element {
   const [slides, setSlides] = useState<PresentationSlide[]>([])

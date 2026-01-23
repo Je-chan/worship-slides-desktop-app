@@ -13,7 +13,7 @@ import {
   getBackgroundStyles,
   getOverlayStyles,
 } from '@shared/lib/slideStyles'
-import type { BackupSongData, ConflictInfo, BackupData } from 'src/preload/index.d'
+import type { BackupSongData, ConflictInfo, BackupData } from '@shared/types'
 
 type StyleTab = 'title' | 'lyrics'
 type ConflictStrategy = 'skip' | 'overwrite' | 'newCode'
