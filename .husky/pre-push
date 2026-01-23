@@ -1,0 +1,26 @@
+#!/bin/sh
+
+echo "🔍 Push 전 검사를 실행합니다..."
+
+# Lint 검사
+echo "📝 Lint 검사 중..."
+pnpm lint || {
+  echo "❌ Lint 검사 실패. 코드를 수정해주세요."
+  exit 1
+}
+
+# 테스트 실행
+echo "🧪 테스트 실행 중..."
+pnpm test || {
+  echo "❌ 테스트 실패. 테스트를 수정해주세요."
+  exit 1
+}
+
+# 빌드 검사
+echo "🔨 빌드 검사 중..."
+pnpm build || {
+  echo "❌ 빌드 실패. 코드를 수정해주세요."
+  exit 1
+}
+
+echo "✅ 모든 검사 통과! Push를 진행합니다."
