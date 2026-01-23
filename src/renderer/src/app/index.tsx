@@ -1,10 +1,12 @@
 import { AppRouter } from './routes'
-import { ThemeProvider } from '@shared/lib'
+import { ThemeProvider, ToastProvider } from '@shared/lib'
 
 function App(): JSX.Element {
   return (
     <ThemeProvider>
-      <AppRouter />
+      <ToastProvider>
+        <AppRouter />
+      </ToastProvider>
     </ThemeProvider>
   )
 }

@@ -14,6 +14,7 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
+import { useToast } from '@shared/lib'
 import { useTags, usePreviewScroll } from '@shared/hooks'
 import type { Song, Slide, Tag } from '@shared/types'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
@@ -23,6 +24,7 @@ type ViewMode = 'view' | 'edit'
 export function SongDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const toast = useToast()
   const songId = parseInt(id || '0', 10)
 
   const [mode, setMode] = useState<ViewMode>('view')
@@ -115,8 +117,8 @@ export function SongDetailPage(): JSX.Element {
           order: songData.order,
           lyrics: slidesToLyrics(lyricsSlides)
         })
-      } catch (error) {
-        console.error('데이터 로드 실패:', error)
+      } catch {
+        toast.error('데이터를 불러오는데 실패했습니다.')
         navigate('/songs')
       } finally {
         setIsLoading(false)
@@ -223,8 +225,7 @@ export function SongDetailPage(): JSX.Element {
       setSongTags(updatedSongTags)
 
       setMode('view')
-    } catch (error) {
-      console.error('저장 실패:', error)
+    } catch {
       setSubmitError('저장에 실패했습니다. 다시 시도해주세요.')
     }
   }
@@ -236,8 +237,7 @@ export function SongDetailPage(): JSX.Element {
       await window.songTagApi.setTagsForSong(songId, [])
       await window.songApi.delete(songId)
       navigate('/songs')
-    } catch (error) {
-      console.error('삭제 실패:', error)
+    } catch {
       setSubmitError('삭제에 실패했습니다.')
     }
   }

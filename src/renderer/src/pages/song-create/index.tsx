@@ -13,12 +13,14 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
+import { useToast } from '@shared/lib'
 import { useTags, usePreviewScroll } from '@shared/hooks'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
 import { PenLine } from 'lucide-react'
 
 export function SongCreatePage(): JSX.Element {
   const navigate = useNavigate()
+  const toast = useToast()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [newTagName, setNewTagName] = useState('')
   const [orderDuplicateError, setOrderDuplicateError] = useState<string | null>(null)
@@ -76,8 +78,8 @@ export function SongCreatePage(): JSX.Element {
           const maxOrder = await window.songApi.getMaxOrderByCode(watchCode)
           setValue('order', maxOrder + 1)
           setOrderDuplicateError(null)
-        } catch (error) {
-          console.error('순서 조회 실패:', error)
+        } catch {
+          // 순서 조회 실패 시 무시 (사용자가 직접 입력 가능)
         }
       }
     }
@@ -130,9 +132,9 @@ export function SongCreatePage(): JSX.Element {
         await window.songTagApi.setTagsForSong(song.id, selectedTagIds)
       }
 
+      toast.success('찬양이 등록되었습니다.')
       navigate('/songs')
-    } catch (error) {
-      console.error('저장 실패:', error)
+    } catch {
       setSubmitError('저장에 실패했습니다. 다시 시도해주세요.')
     }
   }

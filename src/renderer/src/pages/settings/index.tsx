@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@shared/ui'
+import { useToast } from '@shared/lib'
 import {
   SlideStyles,
   SlideTypeStyle,
@@ -36,6 +37,7 @@ interface ImportState {
 }
 
 export function SettingsPage(): JSX.Element {
+  const toast = useToast()
   const [styles, setStyles] = useState<SlideStyles>(loadStyles())
   const [activeTab, setActiveTab] = useState<StyleTab>('title')
   const [saved, setSaved] = useState(false)
@@ -136,12 +138,12 @@ export function SettingsPage(): JSX.Element {
     try {
       const result = await window.backupApi.export()
       if (result.success) {
-        alert(`백업이 완료되었습니다.\n${result.filePath}`)
+        toast.success('백업이 완료되었습니다.')
       } else if (!result.canceled) {
-        alert(`백업 실패: ${result.error}`)
+        toast.error(`백업 실패: ${result.error}`)
       }
     } catch (error) {
-      alert(`백업 중 오류 발생: ${error}`)
+      toast.error(`백업 중 오류가 발생했습니다.`)
     } finally {
       setIsExporting(false)
     }
@@ -168,10 +170,10 @@ export function SettingsPage(): JSX.Element {
           await processImportWithoutConflicts(result.backupData)
         }
       } else if (!result.canceled) {
-        alert(result.error || '백업 파일을 읽을 수 없습니다.')
+        toast.error(result.error || '백업 파일을 읽을 수 없습니다.')
       }
-    } catch (error) {
-      alert(`파일 읽기 중 오류 발생: ${error}`)
+    } catch {
+      toast.error('파일 읽기 중 오류가 발생했습니다.')
     }
   }
 

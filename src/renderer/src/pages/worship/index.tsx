@@ -61,8 +61,7 @@ export function WorshipPage(): JSX.Element {
       setNotFoundCodes(missing)
 
       setSlides(loadedSlides)
-    } catch (err) {
-      console.error('슬라이드 로드 실패:', err)
+    } catch {
       setError('슬라이드를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)
@@ -78,8 +77,7 @@ export function WorshipPage(): JSX.Element {
 
     try {
       await window.presentationApi.open(slides)
-    } catch (err) {
-      console.error('프레젠테이션 시작 실패:', err)
+    } catch {
       setError('프레젠테이션을 시작할 수 없습니다.')
     }
   }

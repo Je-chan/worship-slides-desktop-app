@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
+import { useToast } from '@shared/lib'
 import type { Song, Tag } from '@shared/types'
 import { ALLOWED_CODES } from '@features/song-create/model'
 
@@ -11,6 +12,7 @@ type SortBy = 'title' | 'code'
 
 export function SongListPage(): JSX.Element {
   const navigate = useNavigate()
+  const toast = useToast()
   const [songs, setSongs] = useState<Song[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('group')
@@ -38,8 +40,8 @@ export function SongListPage(): JSX.Element {
           tagMap[song.id] = songTags
         }
         setSongTagMap(tagMap)
-      } catch (error) {
-        console.error('데이터 로드 실패:', error)
+      } catch {
+        toast.error('데이터를 불러오는데 실패했습니다.')
       } finally {
         setIsLoading(false)
       }

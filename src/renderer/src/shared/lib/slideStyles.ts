@@ -141,8 +141,8 @@ export function loadStyles(): SlideStyles {
 
       return styles
     }
-  } catch (e) {
-    console.error('스타일 로드 실패:', e)
+  } catch {
+    // localStorage 파싱 실패 시 기본값 반환
   }
   return DEFAULT_STYLES
 }
