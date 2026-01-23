@@ -14,6 +14,7 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
+import { useTags } from '@shared/hooks'
 import type { Song, Slide, Tag } from '@shared/types'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
 
@@ -27,11 +28,18 @@ export function SongDetailPage(): JSX.Element {
   const [mode, setMode] = useState<ViewMode>('view')
   const [song, setSong] = useState<Song | null>(null)
   const [slides, setSlides] = useState<Slide[]>([])
-  const [tags, setTags] = useState<Tag[]>([])
-  const [allTags, setAllTags] = useState<Tag[]>([])
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
+  const [songTags, setSongTags] = useState<Tag[]>([])
   const [newTagName, setNewTagName] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+
+  // 태그 관리 훅
+  const {
+    tags: allTags,
+    selectedTagIds,
+    toggleTag,
+    createTag,
+    setSelectedTagIds
+  } = useTags()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [orderDuplicateError, setOrderDuplicateError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -98,11 +106,10 @@ export function SongDetailPage(): JSX.Element {
       }
 
       try {
-        const [songData, slidesData, songTags, allTagsData] = await Promise.all([
+        const [songData, slidesData, tagsForSong] = await Promise.all([
           window.songApi.getById(songId),
           window.slideApi.getBySongId(songId),
-          window.songTagApi.getBySongId(songId),
-          window.tagApi.getAll()
+          window.songTagApi.getBySongId(songId)
         ])
 
         if (!songData) {
@@ -112,9 +119,8 @@ export function SongDetailPage(): JSX.Element {
 
         setSong(songData)
         setSlides(slidesData)
-        setTags(songTags)
-        setAllTags(allTagsData)
-        setSelectedTagIds(songTags.map((t) => t.id))
+        setSongTags(tagsForSong)
+        setSelectedTagIds(tagsForSong.map((t) => t.id))
 
         // 폼 초기값 설정 (슬라이드 2번부터가 가사)
         const lyricsSlides = slidesData.filter((s) => s.slide_number >= 2).map((s) => s.content)
@@ -132,32 +138,19 @@ export function SongDetailPage(): JSX.Element {
       }
     }
     loadData()
-  }, [songId, navigate, reset])
+  }, [songId, navigate, reset, setSelectedTagIds])
 
-  // 태그 토글
-  const toggleTag = (tagId: number) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    )
-  }
-
-  // 태그 생성
+  // 태그 생성 핸들러
   const handleCreateTag = async () => {
     const trimmed = newTagName.trim()
     if (!trimmed) return
 
-    if (allTags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
+    const success = await createTag(trimmed)
+    if (success) {
       setNewTagName('')
-      return
-    }
-
-    try {
-      const newTag = await window.tagApi.create(trimmed)
-      setAllTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, 'ko')))
-      setSelectedTagIds((prev) => [...prev, newTag.id])
+    } else {
+      // 중복 태그인 경우에도 입력 필드 초기화
       setNewTagName('')
-    } catch (error) {
-      console.error('태그 생성 실패:', error)
     }
   }
 
@@ -194,7 +187,7 @@ export function SongDetailPage(): JSX.Element {
       order: song.order,
       lyrics: slidesToLyrics(lyricsSlides)
     })
-    setSelectedTagIds(tags.map((t) => t.id))
+    setSelectedTagIds(songTags.map((t) => t.id))
     setOrderDuplicateError(null)
     setSubmitError(null)
     setMode('view')
@@ -234,7 +227,7 @@ export function SongDetailPage(): JSX.Element {
       await window.songTagApi.setTagsForSong(songId, selectedTagIds)
 
       // 4. 데이터 다시 로드
-      const [updatedSong, updatedSlides, updatedTags] = await Promise.all([
+      const [updatedSong, updatedSlides, updatedSongTags] = await Promise.all([
         window.songApi.getById(songId),
         window.slideApi.getBySongId(songId),
         window.songTagApi.getBySongId(songId)
@@ -242,7 +235,7 @@ export function SongDetailPage(): JSX.Element {
 
       setSong(updatedSong)
       setSlides(updatedSlides)
-      setTags(updatedTags)
+      setSongTags(updatedSongTags)
 
       setMode('view')
     } catch (error) {
@@ -300,9 +293,9 @@ export function SongDetailPage(): JSX.Element {
                   {song.title}
                 </h1>
               </div>
-              {tags.length > 0 && (
+              {songTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {tags.map((tag) => (
+                  {songTags.map((tag) => (
                     <span
                       key={tag.id}
                       className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-600 border border-slate-200/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50"

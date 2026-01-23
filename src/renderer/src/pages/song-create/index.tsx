@@ -13,55 +13,24 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
-import type { Tag } from '@shared/types'
+import { useTags } from '@shared/hooks'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
 import { PenLine } from 'lucide-react'
 
 export function SongCreatePage(): JSX.Element {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [tags, setTags] = useState<Tag[]>([])
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [newTagName, setNewTagName] = useState('')
   const [orderDuplicateError, setOrderDuplicateError] = useState<string | null>(null)
 
-  // 태그 목록 로드
-  useEffect(() => {
-    const loadTags = async () => {
-      try {
-        const tagsData = await window.tagApi.getAll()
-        setTags(tagsData)
-      } catch (error) {
-        console.error('태그 목록 로드 실패:', error)
-      }
-    }
-    loadTags()
-  }, [])
+  // 태그 관리 훅
+  const { tags, selectedTagIds, toggleTag, createTag } = useTags()
 
-  // 태그 토글
-  const toggleTag = (tagId: number) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    )
-  }
-
-  // 태그 생성
+  // 태그 생성 핸들러
   const handleCreateTag = async () => {
-    const trimmed = newTagName.trim()
-    if (!trimmed) return
-
-    if (tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
+    const success = await createTag(newTagName)
+    if (success) {
       setNewTagName('')
-      return
-    }
-
-    try {
-      const newTag = await window.tagApi.create(trimmed)
-      setTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, 'ko')))
-      setSelectedTagIds((prev) => [...prev, newTag.id])
-      setNewTagName('')
-    } catch (error) {
-      console.error('태그 생성 실패:', error)
     }
   }
 
