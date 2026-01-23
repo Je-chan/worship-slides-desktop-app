@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { PlayCircle } from 'lucide-react'
+import { PlayCircle, Search } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardContent, Label, PageHeader, CodeBadge, LoadingSpinner } from '@shared/ui'
-import type { PresentationSlide, ParsedSongCode } from '@shared/types'
+import type { PresentationSlide, ParsedSongCode, Song } from '@shared/types'
 
 export function WorshipPage(): JSX.Element {
   const [songCodesInput, setSongCodesInput] = useState('')
@@ -10,6 +10,35 @@ export function WorshipPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [notFoundCodes, setNotFoundCodes] = useState<string[]>([])
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 찬양 검색 상태
+  const [searchQuery, setSearchQuery] = useState('')
+  const [allSongs, setAllSongs] = useState<Song[]>([])
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  // 모든 찬양 목록 로드
+  useEffect(() => {
+    window.songApi.getAll().then(setAllSongs)
+  }, [])
+
+  // 검색 결과 필터링
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    const query = searchQuery.toLowerCase()
+    return allSongs
+      .filter((song) => song.title.toLowerCase().includes(query))
+      .slice(0, 10) // 최대 10개
+  }, [searchQuery, allSongs])
+
+  // 검색 결과에서 찬양 선택
+  const handleSelectSong = (song: Song) => {
+    const code = `${song.code}${song.order}`
+    setSongCodesInput((prev) => {
+      if (!prev.trim()) return code
+      return `${prev}, ${code}`
+    })
+    setSearchQuery('')
+  }
 
   // 입력된 코드를 파싱하여 배열로 변환
   const parsedCodes = useMemo((): ParsedSongCode[] => {
@@ -145,6 +174,48 @@ export function WorshipPage(): JSX.Element {
               placeholder="C1, C2, A3, A4"
             />
             <p className="text-xs text-slate-400">쉼표(,) 또는 공백으로 구분</p>
+          </div>
+
+          {/* 찬양 검색 */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+            >
+              <Search className="w-4 h-4" />
+              {isSearchOpen ? '검색 닫기' : '제목으로 검색'}
+            </button>
+
+            {isSearchOpen && (
+              <div className="space-y-2">
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="찬양 제목을 입력하세요..."
+                />
+                {searchResults.length > 0 && (
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                    {searchResults.map((song) => (
+                      <button
+                        key={song.id}
+                        type="button"
+                        onClick={() => handleSelectSong(song)}
+                        className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700 last:border-b-0 transition-colors"
+                      >
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{song.title}</span>
+                        <CodeBadge code={song.code} order={song.order} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchQuery.trim() && searchResults.length === 0 && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    검색 결과가 없습니다.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 파싱된 코드 미리보기 */}
