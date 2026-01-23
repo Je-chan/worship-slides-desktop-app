@@ -1,58 +1,109 @@
 import { Link } from 'react-router-dom'
-import { PlayCircle, Plus, Music, Settings } from 'lucide-react'
+import { PlayCircle, Plus, Music, Settings, ArrowRight, Home } from 'lucide-react'
+
+const menuItems = [
+  {
+    to: '/worship',
+    icon: PlayCircle,
+    title: '예배 준비',
+    description: '찬양 순서를 입력하고 슬라이드 쇼를 시작합니다.',
+    primary: true
+  },
+  {
+    to: '/songs/create',
+    icon: Plus,
+    title: '찬양 등록',
+    description: '새로운 찬양과 가사를 등록합니다.'
+  },
+  {
+    to: '/songs',
+    icon: Music,
+    title: '찬양 목록',
+    description: '등록된 찬양을 확인하고 관리합니다.'
+  },
+  {
+    to: '/settings',
+    icon: Settings,
+    title: '슬라이드 설정',
+    description: '슬라이드 쇼 스타일을 설정합니다.'
+  }
+]
 
 export function HomePage(): JSX.Element {
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 PPT</h1>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">찬양 가사 슬라이드를 관리하고 프레젠테이션하세요.</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+          <Home className="w-6 h-6 text-primary-600 dark:text-primary-300" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">홈</h1>
+          <p className="mt-0.5 text-slate-500 dark:text-slate-400">원하는 기능을 선택하세요.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <Link
-          to="/worship"
-          className="group p-6 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 rounded-2xl border border-primary-200 dark:border-primary-800 hover:shadow-lg hover:shadow-primary-500/10 transition-all"
-        >
-          <div className="w-12 h-12 rounded-xl bg-primary-500 text-white flex items-center justify-center mb-4">
-            <PlayCircle className="w-6 h-6" />
-          </div>
-          <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">예배 준비</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">찬양 순서를 입력하고 슬라이드 쇼를 시작합니다.</p>
-        </Link>
-
-        <Link
-          to="/songs/create"
-          className="group p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-lg transition-all"
-        >
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mb-4 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            <Plus className="w-6 h-6" />
-          </div>
-          <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">찬양 등록</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">새로운 찬양과 가사를 등록합니다.</p>
-        </Link>
-
-        <Link
-          to="/songs"
-          className="group p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-lg transition-all"
-        >
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mb-4 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            <Music className="w-6 h-6" />
-          </div>
-          <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">찬양 목록</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">등록된 찬양을 확인하고 관리합니다.</p>
-        </Link>
-
-        <Link
-          to="/settings"
-          className="group p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-lg transition-all"
-        >
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mb-4 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            <Settings className="w-6 h-6" />
-          </div>
-          <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">슬라이드 설정</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">슬라이드 쇼 스타일을 설정합니다.</p>
-        </Link>
+      {/* Menu Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`
+                group relative overflow-hidden rounded-xl transition-all duration-200
+                ${item.primary
+                  ? 'bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-600/20 hover:shadow-xl hover:shadow-primary-600/25 hover:-translate-y-0.5'
+                  : 'bg-white border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:shadow-md hover:border-slate-300/80 hover:-translate-y-0.5 dark:bg-slate-800/80 dark:border-slate-700/50 dark:shadow-slate-900/20 dark:hover:border-slate-600'
+                }
+              `}
+            >
+              <div className="p-5">
+                <div className={`
+                  w-10 h-10 rounded-lg flex items-center justify-center mb-3
+                  ${item.primary
+                    ? 'bg-white/15'
+                    : 'bg-slate-100 dark:bg-slate-700/80'
+                  }
+                `}>
+                  <Icon
+                    className={`w-5 h-5 ${
+                      item.primary
+                        ? 'text-white'
+                        : 'text-slate-600 dark:text-slate-300'
+                    }`}
+                  />
+                </div>
+                <h3
+                  className={`font-semibold mb-1 ${
+                    item.primary
+                      ? 'text-white'
+                      : 'text-slate-900 dark:text-slate-100'
+                  }`}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    item.primary
+                      ? 'text-primary-100'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {item.description}
+                </p>
+                <div className={`
+                  mt-3 flex items-center gap-1 text-sm font-medium opacity-0 -translate-x-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0
+                  ${item.primary ? 'text-white/90' : 'text-primary-600 dark:text-primary-400'}
+                `}>
+                  <span>이동</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

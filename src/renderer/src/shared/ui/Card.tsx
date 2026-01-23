@@ -8,10 +8,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={`
-          bg-white rounded-2xl border border-slate-200/60
-          shadow-sm hover:shadow-md
-          transition-all duration-200
-          dark:bg-slate-800 dark:border-slate-700/60
+          bg-white rounded-xl border border-slate-200/80
+          shadow-sm shadow-slate-200/50
+          dark:bg-slate-800/80 dark:border-slate-700/50
+          dark:shadow-slate-900/30
           ${className}
         `}
         {...props}
@@ -31,7 +31,7 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`px-6 py-5 border-b border-slate-100 dark:border-slate-700 ${className}`}
+        className={`px-5 py-4 border-b border-slate-100/80 bg-slate-50/30 dark:border-slate-700/50 dark:bg-slate-800/30 ${className}`}
         {...props}
       >
         {children}
@@ -47,7 +47,7 @@ interface CardContentProps extends ComponentPropsWithoutRef<'div'> {}
 export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className = '', children, ...props }, ref) => {
     return (
-      <div ref={ref} className={`px-6 py-5 ${className}`} {...props}>
+      <div ref={ref} className={`px-5 py-4 ${className}`} {...props}>
         {children}
       </div>
     )
@@ -63,7 +63,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={`px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl dark:border-slate-700 dark:bg-slate-900/50 ${className}`}
+        className={`px-5 py-3 border-t border-slate-100 bg-slate-50 rounded-b-xl dark:border-slate-700 dark:bg-slate-800 ${className}`}
         {...props}
       >
         {children}

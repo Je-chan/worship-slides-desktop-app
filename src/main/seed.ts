@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   createSong,
   createSlide,
@@ -5,10 +6,8 @@ import {
   deleteSlidesBySongId,
   deleteSong,
   createTag,
-  getAllTags,
   getTagByName,
-  addTagToSong,
-  deleteTag
+  addTagToSong
 } from './database'
 
 interface SeedSong {

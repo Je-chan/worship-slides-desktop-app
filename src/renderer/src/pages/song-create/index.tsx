@@ -6,6 +6,7 @@ import {
   Button,
   Input,
   Label,
+  Select,
   Textarea,
   Card,
   CardHeader,
@@ -13,6 +14,7 @@ import {
   FormField
 } from '@shared/ui'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
+import { PenLine } from 'lucide-react'
 
 interface Tag {
   id: number
@@ -89,20 +91,14 @@ export function SongCreatePage(): JSX.Element {
   const watchLyrics = watch('lyrics')
   const watchTitle = watch('title')
 
-  // 실시간 슬라이드 미리보기 계산
-  const previewSlides = useMemo(() => {
-    const slides: string[] = []
-    // 제목 슬라이드
-    if (watchTitle.trim()) {
-      slides.push(watchTitle.trim())
-    }
-    // 가사 슬라이드들
-    if (watchLyrics) {
-      const lyricsSlides = parseLyricsToSlides(watchLyrics)
-      slides.push(...lyricsSlides)
-    }
-    return slides
-  }, [watchTitle, watchLyrics])
+  // 가사 슬라이드 미리보기 계산 (제목 제외)
+  const lyricsSlides = useMemo(() => {
+    if (!watchLyrics) return []
+    return parseLyricsToSlides(watchLyrics)
+  }, [watchLyrics])
+
+  // 총 슬라이드 개수 (제목 1개 + 가사 슬라이드)
+  const totalSlideCount = 1 + lyricsSlides.length
 
   // 미리보기 자동 스크롤
   const previewRef = useRef<HTMLDivElement>(null)
@@ -122,7 +118,7 @@ export function SongCreatePage(): JSX.Element {
     if (el && isAtBottomRef.current) {
       el.scrollTop = el.scrollHeight
     }
-  }, [previewSlides])
+  }, [lyricsSlides])
 
   // 코드 변경 시 순서 자동 계산
   useEffect(() => {
@@ -197,10 +193,15 @@ export function SongCreatePage(): JSX.Element {
   const canSubmit = hasLyrics && !orderDuplicateError
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 등록</h1>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">새로운 찬양과 가사를 등록합니다.</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+          <PenLine className="w-6 h-6 text-primary-600 dark:text-primary-300" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 등록</h1>
+          <p className="mt-0.5 text-slate-500 dark:text-slate-400">새로운 찬양과 가사를 등록합니다.</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -231,15 +232,11 @@ export function SongCreatePage(): JSX.Element {
                   name="code"
                   control={control}
                   render={({ field }) => (
-                    <select
+                    <Select
                       id="code"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
-                      className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-200 ease-out shadow-sm bg-white dark:bg-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 focus:shadow-md hover:border-slate-400 dark:hover:border-slate-500 ${
-                        errors.code
-                          ? 'border-red-400 focus:ring-red-500/50 focus:border-red-400'
-                          : 'border-slate-200 dark:border-slate-600'
-                      }`}
+                      error={!!errors.code}
                     >
                       <option value="">코드 선택</option>
                       {ALLOWED_CODES.map((code) => (
@@ -247,7 +244,7 @@ export function SongCreatePage(): JSX.Element {
                           {code}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   )}
                 />
               </FormField>
@@ -328,10 +325,10 @@ export function SongCreatePage(): JSX.Element {
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 shadow-sm ${
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
                           selectedTagIds.includes(tag.id)
-                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100'
+                            ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-sm shadow-primary-700/30'
+                            : 'bg-slate-100/80 text-slate-600 border border-slate-200/50 hover:bg-slate-200/80 hover:text-slate-800 hover:border-slate-300/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50 dark:hover:bg-slate-600 dark:hover:text-slate-100'
                         }`}
                       >
                         {tag.name}
@@ -381,35 +378,48 @@ export function SongCreatePage(): JSX.Element {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>슬라이드 미리보기</Label>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium">
-                    {previewSlides.length}개
+                  <span className="text-xs px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-semibold shadow-sm">
+                    {totalSlideCount}개
                   </span>
                 </div>
                 <div
                   ref={previewRef}
                   onScroll={handlePreviewScroll}
-                  className="h-[420px] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 space-y-2"
+                  className="h-[420px] overflow-y-auto rounded-xl border border-slate-200/80 dark:border-slate-700/50 bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-900/30 p-3 space-y-2.5"
                 >
-                  {previewSlides.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-400 dark:text-slate-500 text-sm">
+                  {/* 슬라이드 1번: 제목 (항상 표시) */}
+                  <div className="p-3.5 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-100/80 dark:border-slate-700/50 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/30 transition-all duration-150 hover:shadow hover:border-slate-200 dark:hover:border-slate-600">
+                    <div className="flex items-start gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200/80 dark:from-primary-800/50 dark:to-primary-900/50 text-primary-700 dark:text-primary-200 text-xs font-bold flex items-center justify-center shadow-sm">
+                        1
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-primary-100/80 dark:bg-primary-800/40 text-primary-700 dark:text-primary-300 font-medium mb-1.5 inline-block">
+                          제목
+                        </span>
+                        <p className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${watchTitle.trim() ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 italic'}`}>
+                          {watchTitle.trim() || '제목을 입력해주세요'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 슬라이드 2번부터: 가사 */}
+                  {lyricsSlides.length === 0 ? (
+                    <div className="flex items-center justify-center py-10 text-slate-400 dark:text-slate-500 text-sm">
                       가사를 입력하면 슬라이드가 표시됩니다
                     </div>
                   ) : (
-                    previewSlides.map((content, index) => (
+                    lyricsSlides.map((content, index) => (
                       <div
                         key={index}
-                        className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
+                        className="p-3.5 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-100/80 dark:border-slate-700/50 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/30 transition-all duration-150 hover:shadow hover:border-slate-200 dark:hover:border-slate-600"
                       >
                         <div className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-md bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-bold flex items-center justify-center">
-                            {index + 1}
+                          <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200/80 dark:from-slate-700/80 dark:to-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center shadow-sm">
+                            {index + 2}
                           </span>
-                          <div className="flex-1 min-w-0">
-                            {index === 0 && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium mb-1 inline-block">
-                                제목
-                              </span>
-                            )}
+                          <div className="flex-1 min-w-0 pt-1">
                             <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words leading-relaxed">
                               {content}
                             </p>

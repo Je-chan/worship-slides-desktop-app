@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
-import { Plus, X, Search, ChevronDown } from 'lucide-react'
+import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
 
 type ViewMode = 'list' | 'group'
@@ -170,11 +170,16 @@ export function SongListPage(): JSX.Element {
     <div className="space-y-8 animate-fade-in">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 목록</h1>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">
-            총 <span className="font-semibold text-primary-600 dark:text-primary-400">{songs.length}</span>개의 찬양이 등록되어 있습니다.
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+            <Music className="w-6 h-6 text-primary-600 dark:text-primary-300" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 목록</h1>
+            <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+              총 <span className="font-semibold text-primary-600 dark:text-primary-400">{songs.length}</span>개의 찬양이 등록되어 있습니다.
+            </p>
+          </div>
         </div>
         <Link to="/songs/create">
           <Button>
@@ -206,7 +211,7 @@ export function SongListPage(): JSX.Element {
                 {selectedTags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary-600 text-white"
                   >
                     {tag.name}
                     <button
@@ -327,7 +332,7 @@ export function SongListPage(): JSX.Element {
                 <Card className="overflow-hidden">
                   <DisclosureButton className="w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-bold text-lg flex items-center justify-center shadow-sm">
+                      <span className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-bold text-lg flex items-center justify-center">
                         {code}
                       </span>
                       <div className="text-left">
@@ -399,7 +404,7 @@ export function SongListPage(): JSX.Element {
                   className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="w-14 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold flex items-center justify-center shadow-sm">
+                    <span className="px-3 py-2 rounded-lg bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-mono text-sm font-medium flex items-center justify-center">
                       {song.code}{song.order}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 font-medium">{song.title}</span>

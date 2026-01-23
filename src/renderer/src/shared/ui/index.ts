@@ -1,6 +1,7 @@
 export { Button } from './Button'
 export { Input } from './Input'
 export { Label } from './Label'
+export { Select } from './Select'
 export { Textarea } from './Textarea'
 export { Card, CardHeader, CardContent, CardFooter } from './Card'
 export { FormField } from './FormField'

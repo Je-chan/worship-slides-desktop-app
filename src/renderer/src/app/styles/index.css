@@ -3,7 +3,7 @@
 /* Enable class-based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Custom theme variables */
+/* Custom theme variables - Bright Sky Blue */
 @theme {
   --color-primary-50: #f0f9ff;
   --color-primary-100: #e0f2fe;
@@ -28,13 +28,13 @@ html, body, #root {
 }
 
 body {
-  @apply bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900 antialiased;
-  @apply transition-colors duration-300;
+  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply transition-colors duration-200;
 }
 
 /* Dark mode base */
 .dark body {
-  @apply bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100;
+  @apply bg-slate-900 text-slate-100;
 }
 
 /* Custom scrollbar - hidden by default, show on hover */

@@ -217,7 +217,7 @@ export function PresentationPage(): JSX.Element {
 
       {/* 메인 슬라이드 영역 */}
       <div className="flex-1 flex items-center justify-center p-8 relative z-10" style={transitionStyle}>
-        <div className="max-w-5xl w-full">
+        <div className="w-full">
           <p
             className="whitespace-pre-wrap"
             style={textStyle}

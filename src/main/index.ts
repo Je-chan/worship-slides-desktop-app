@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, protocol } from 'electron'
 import { join } from 'path'
 import { copyFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -119,7 +119,53 @@ function togglePresentationFullscreen(fullscreen: boolean): void {
   }
 }
 
+// 커스텀 프로토콜 등록 (app ready 전에 호출해야 함)
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app-background',
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true
+    }
+  }
+])
+
 app.whenReady().then(() => {
+  // 커스텀 프로토콜 핸들러 등록
+  protocol.handle('app-background', (request) => {
+    // URL에서 파일 경로 추출
+    let filePath = request.url.slice('app-background://'.length)
+    filePath = decodeURIComponent(filePath)
+
+    // 파일 존재 확인
+    if (!existsSync(filePath)) {
+      return new Response('File not found', { status: 404 })
+    }
+
+    // 파일 읽기
+    const fileBuffer = readFileSync(filePath)
+
+    // MIME 타입 결정
+    const ext = filePath.split('.').pop()?.toLowerCase()
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp'
+    }
+    const contentType = mimeTypes[ext || ''] || 'application/octet-stream'
+
+    return new Response(fileBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(fileBuffer.length)
+      }
+    })
+  })
+
   // DB 초기화
   initDatabase()
 
@@ -274,7 +320,8 @@ app.whenReady().then(() => {
 
     try {
       copyFileSync(sourcePath, destPath)
-      return `file://${destPath}`
+      // 커스텀 프로토콜 사용 (file:// 대신)
+      return `app-background://${destPath}`
     } catch (error) {
       console.error('이미지 복사 실패:', error)
       return null
@@ -283,8 +330,8 @@ app.whenReady().then(() => {
 
   ipcMain.handle('image:delete', (_, imagePath: string) => {
     try {
-      // file:// 프로토콜 제거
-      const filePath = imagePath.replace('file://', '')
+      // 프로토콜 제거 (file:// 또는 app-background://)
+      const filePath = imagePath.replace('file://', '').replace('app-background://', '')
       if (existsSync(filePath) && filePath.startsWith(imagesDir)) {
         unlinkSync(filePath)
         return true

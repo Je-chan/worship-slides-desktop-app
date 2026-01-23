@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Pencil, Trash2, ChevronLeft } from 'lucide-react'
+import { Pencil, Trash2, ChevronLeft, Music } from 'lucide-react'
 import {
   Button,
   Input,
   Label,
+  Select,
   Textarea,
   Card,
   CardHeader,
@@ -301,31 +302,35 @@ export function SongDetailPage(): JSX.Element {
   // 읽기 모드
   if (mode === 'view') {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         {/* 헤더 */}
         <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1.5 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold">
-                {song.code}
-                {song.order}
-              </span>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {song.title}
-              </h1>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+              <Music className="w-6 h-6 text-primary-600 dark:text-primary-300" />
             </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold shadow-sm">
+                  {song.code}{song.order}
+                </span>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {song.title}
+                </h1>
               </div>
-            )}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-600 border border-slate-200/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50"
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={enterEditMode}>
@@ -375,27 +380,30 @@ export function SongDetailPage(): JSX.Element {
         {/* 슬라이드 목록 */}
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-              슬라이드 ({slides.length}개)
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">슬라이드</h2>
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-semibold shadow-sm">
+                {slides.length}개
+              </span>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2.5">
             {slides.map((slide) => (
               <div
                 key={slide.id}
-                className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
+                className="p-3.5 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-100/80 dark:border-slate-700/50 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/30 transition-all duration-150 hover:shadow hover:border-slate-200 dark:hover:border-slate-600"
               >
-                <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold flex items-center justify-center">
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200/80 dark:from-primary-800/50 dark:to-primary-900/50 text-primary-700 dark:text-primary-200 text-xs font-bold flex items-center justify-center shadow-sm">
                     {slide.slide_number}
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     {slide.slide_number === 1 && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium mb-2 inline-block">
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-primary-100/80 dark:bg-primary-800/40 text-primary-700 dark:text-primary-300 font-medium mb-1.5 inline-block">
                         제목
                       </span>
                     )}
-                    <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
                       {slide.content}
                     </p>
                   </div>
@@ -418,12 +426,15 @@ export function SongDetailPage(): JSX.Element {
 
   // 수정 모드
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-          찬양 수정
-        </h1>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">찬양 정보와 가사를 수정합니다.</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+          <Pencil className="w-6 h-6 text-primary-600 dark:text-primary-300" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">찬양 수정</h1>
+          <p className="mt-0.5 text-slate-500 dark:text-slate-400">찬양 정보와 가사를 수정합니다.</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -454,15 +465,11 @@ export function SongDetailPage(): JSX.Element {
                   name="code"
                   control={control}
                   render={({ field }) => (
-                    <select
+                    <Select
                       id="code"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
-                      className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-200 ease-out shadow-sm bg-white dark:bg-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 focus:shadow-md hover:border-slate-400 dark:hover:border-slate-500 ${
-                        errors.code
-                          ? 'border-red-400 focus:ring-red-500/50 focus:border-red-400'
-                          : 'border-slate-200 dark:border-slate-600'
-                      }`}
+                      error={!!errors.code}
                     >
                       <option value="">코드 선택</option>
                       {ALLOWED_CODES.map((code) => (
@@ -470,7 +477,7 @@ export function SongDetailPage(): JSX.Element {
                           {code}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   )}
                 />
               </FormField>
@@ -551,10 +558,10 @@ export function SongDetailPage(): JSX.Element {
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 shadow-sm ${
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
                           selectedTagIds.includes(tag.id)
-                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100'
+                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-sm shadow-primary-600/30'
+                            : 'bg-slate-100/80 text-slate-600 border border-slate-200/50 hover:bg-slate-200/80 hover:text-slate-800 hover:border-slate-300/50 dark:bg-slate-700/80 dark:text-slate-300 dark:border-slate-600/50 dark:hover:bg-slate-600 dark:hover:text-slate-100'
                         }`}
                       >
                         {tag.name}

@@ -121,12 +121,17 @@ export function WorshipPage(): JSX.Element {
   }, [slides])
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">예배 준비</h1>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">
-          오늘 예배에 사용할 찬양 순서를 입력하고 슬라이드를 시작하세요.
-        </p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800/50 dark:to-primary-900/50 flex items-center justify-center shadow-sm">
+          <PlayCircle className="w-6 h-6 text-primary-600 dark:text-primary-300" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">예배 준비</h1>
+          <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+            오늘 예배에 사용할 찬양 순서를 입력하고 슬라이드를 시작하세요.
+          </p>
+        </div>
       </div>
 
       {/* 찬양 코드 입력 */}
@@ -160,7 +165,7 @@ export function WorshipPage(): JSX.Element {
               {parsedCodes.map((code, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1.5 rounded-lg bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-mono text-sm font-medium"
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-semibold shadow-sm"
                 >
                   {code.display}
                 </span>
@@ -198,7 +203,7 @@ export function WorshipPage(): JSX.Element {
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-slate-900 dark:text-slate-100">슬라이드 미리보기</h2>
-              <span className="text-sm px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium">
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-semibold shadow-sm">
                 총 {slides.length}개
               </span>
             </div>
@@ -207,7 +212,7 @@ export function WorshipPage(): JSX.Element {
             {groupedSlides.map((group, groupIndex) => (
               <div key={groupIndex} className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold">
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-200/80 dark:from-primary-800/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 font-mono text-sm font-bold shadow-sm">
                     {group.songCode}{group.songOrder}
                   </span>
                   <span className="font-medium text-slate-800 dark:text-slate-200">{group.songTitle}</span>
@@ -222,14 +227,14 @@ export function WorshipPage(): JSX.Element {
                     return (
                       <div
                         key={slideIndex}
-                        className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
+                        className="p-3 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-100/80 dark:border-slate-700/50 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/30 transition-all duration-150 hover:shadow hover:border-slate-200 dark:hover:border-slate-600"
                       >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="w-6 h-6 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-md bg-gradient-to-br from-slate-100 to-slate-200/80 dark:from-slate-700/80 dark:to-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center shadow-sm">
                             {globalIndex + 1}
                           </span>
                           {slide.slideNumber === 1 && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 font-medium">
+                            <span className="text-xs px-1.5 py-0.5 rounded-md bg-primary-100/80 dark:bg-primary-800/40 text-primary-700 dark:text-primary-300 font-medium">
                               제목
                             </span>
                           )}

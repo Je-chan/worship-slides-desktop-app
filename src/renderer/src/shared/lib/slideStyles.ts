@@ -129,7 +129,17 @@ export function loadStyles(): SlideStyles {
     if (saved) {
       const parsed = JSON.parse(saved)
       // 기본값과 병합하여 새로운 속성이 추가되어도 누락되지 않도록
-      return deepMerge(DEFAULT_STYLES, parsed)
+      const styles = deepMerge(DEFAULT_STYLES, parsed)
+
+      // 기존 file:// 프로토콜을 app-background://로 마이그레이션
+      if (styles.title.background.image?.startsWith('file://')) {
+        styles.title.background.image = styles.title.background.image.replace('file://', 'app-background://')
+      }
+      if (styles.lyrics.background.image?.startsWith('file://')) {
+        styles.lyrics.background.image = styles.lyrics.background.image.replace('file://', 'app-background://')
+      }
+
+      return styles
     }
   } catch (e) {
     console.error('스타일 로드 실패:', e)
@@ -200,7 +210,7 @@ export function getBackgroundStyles(style: BackgroundStyle): React.CSSProperties
     case 'image':
       return {
         backgroundColor: style.color,
-        backgroundImage: style.image ? `url(${style.image})` : undefined,
+        backgroundImage: style.image ? `url("${style.image}")` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }
