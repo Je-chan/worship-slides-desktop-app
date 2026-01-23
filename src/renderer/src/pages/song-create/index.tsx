@@ -15,7 +15,7 @@ import {
 } from '@shared/ui'
 import { useToast } from '@shared/lib'
 import { useTags, usePreviewScroll } from '@shared/hooks'
-import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
+import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create'
 import { PenLine } from 'lucide-react'
 
 export function SongCreatePage(): JSX.Element {

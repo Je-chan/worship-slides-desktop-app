@@ -17,7 +17,7 @@ import {
 import { useToast } from '@shared/lib'
 import { useTags, usePreviewScroll } from '@shared/hooks'
 import type { Song, Slide, Tag } from '@shared/types'
-import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
+import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create'
 
 type ViewMode = 'view' | 'edit'
 

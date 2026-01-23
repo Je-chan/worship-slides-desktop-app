@@ -5,7 +5,7 @@ import { Plus, X, Search, ChevronDown, Music } from 'lucide-react'
 import { Button, Input, Card, CardContent } from '@shared/ui'
 import { useToast } from '@shared/lib'
 import type { Song, Tag } from '@shared/types'
-import { ALLOWED_CODES } from '@features/song-create/model'
+import { ALLOWED_CODES } from '@features/song-create'
 
 type ViewMode = 'list' | 'group'
 type SortBy = 'title' | 'code'
