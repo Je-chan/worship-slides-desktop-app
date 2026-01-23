@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useTheme } from '@shared/lib'
+import { ErrorBoundary } from '@shared/ui'
 import { Music, PenLine, Moon, Sun, PlayCircle, Sparkles, Settings } from 'lucide-react'
 
 const navItems = [
@@ -78,7 +79,9 @@ export function RootLayout(): JSX.Element {
       {/* Main content */}
       <main className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>
