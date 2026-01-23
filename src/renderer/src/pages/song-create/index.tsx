@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +13,7 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
-import { useTags } from '@shared/hooks'
+import { useTags, usePreviewScroll } from '@shared/hooks'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, type SongCreateFormData } from '@features/song-create/model'
 import { PenLine } from 'lucide-react'
 
@@ -66,24 +66,7 @@ export function SongCreatePage(): JSX.Element {
   const totalSlideCount = 1 + lyricsSlides.length
 
   // 미리보기 자동 스크롤
-  const previewRef = useRef<HTMLDivElement>(null)
-  const isAtBottomRef = useRef(true)
-
-  const handlePreviewScroll = useCallback(() => {
-    const el = previewRef.current
-    if (!el) return
-    // 스크롤이 맨 아래에서 20px 이내면 "맨 아래"로 간주
-    const threshold = 20
-    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-  }, [])
-
-  // 슬라이드가 변경되고 맨 아래를 보고 있었다면 자동 스크롤
-  useEffect(() => {
-    const el = previewRef.current
-    if (el && isAtBottomRef.current) {
-      el.scrollTop = el.scrollHeight
-    }
-  }, [lyricsSlides])
+  const { previewRef, handlePreviewScroll } = usePreviewScroll(lyricsSlides.length)
 
   // 코드 변경 시 순서 자동 계산
   useEffect(() => {

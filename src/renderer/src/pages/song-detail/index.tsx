@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,7 +14,7 @@ import {
   CardContent,
   FormField
 } from '@shared/ui'
-import { useTags } from '@shared/hooks'
+import { useTags, usePreviewScroll } from '@shared/hooks'
 import type { Song, Slide, Tag } from '@shared/types'
 import { songCreateSchema, ALLOWED_CODES, parseLyricsToSlides, slidesToLyrics, type SongCreateFormData } from '@features/song-create/model'
 
@@ -80,22 +80,7 @@ export function SongDetailPage(): JSX.Element {
   }, [watchTitle, watchLyrics])
 
   // 미리보기 자동 스크롤
-  const previewRef = useRef<HTMLDivElement>(null)
-  const isAtBottomRef = useRef(true)
-
-  const handlePreviewScroll = useCallback(() => {
-    const el = previewRef.current
-    if (!el) return
-    const threshold = 20
-    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-  }, [])
-
-  useEffect(() => {
-    const el = previewRef.current
-    if (el && isAtBottomRef.current) {
-      el.scrollTop = el.scrollHeight
-    }
-  }, [previewSlides])
+  const { previewRef, handlePreviewScroll } = usePreviewScroll(previewSlides.length)
 
   // 데이터 로드
   useEffect(() => {
