@@ -1,0 +1,22 @@
+appId: com.worship.slides
+productName: YeDarmWorship
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**/*
+  - "!node_modules/**/*"
+extraMetadata:
+  main: out/main/index.js
+icon: YeDarmWorshipIcon.png
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-Setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+asar: true
+npmRebuild: true
+buildDependenciesFromSource: false
+nodeGypRebuild: false
