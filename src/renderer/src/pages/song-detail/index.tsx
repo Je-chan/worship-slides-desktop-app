@@ -7,7 +7,7 @@ import {
   Button,
   Input,
   Label,
-  Select,
+  NativeSelect,
   Textarea,
   Card,
   CardHeader,
@@ -408,7 +408,7 @@ export function SongDetailPage(): JSX.Element {
                   name="code"
                   control={control}
                   render={({ field }) => (
-                    <Select
+                    <NativeSelect
                       id="code"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -420,7 +420,7 @@ export function SongDetailPage(): JSX.Element {
                           {code}
                         </option>
                       ))}
-                    </Select>
+                    </NativeSelect>
                   )}
                 />
               </FormField>
