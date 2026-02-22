@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog, protocol } from 'electron'
-import { join } from 'path'
+import { join, basename } from 'path'
 import { copyFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import {
@@ -135,8 +135,12 @@ app.whenReady().then(() => {
   // 커스텀 프로토콜 핸들러 등록
   protocol.handle('app-background', (request) => {
     // URL에서 파일 경로 추출
-    let filePath = request.url.slice('app-background://'.length)
-    filePath = decodeURIComponent(filePath)
+    const url = new URL(request.url)
+    let filePath = decodeURIComponent(url.pathname)
+    // Windows: pathname이 /C:/... 형태이므로 선행 슬래시 제거
+    if (process.platform === 'win32' && filePath.startsWith('/')) {
+      filePath = filePath.slice(1)
+    }
 
     // 파일 존재 확인
     if (!existsSync(filePath)) {
@@ -315,13 +319,14 @@ app.whenReady().then(() => {
     }
 
     const sourcePath = result.filePaths[0]
-    const fileName = `bg_${Date.now()}_${sourcePath.split('/').pop()}`
+    const fileName = `bg_${Date.now()}_${basename(sourcePath)}`
     const destPath = join(imagesDir, fileName)
 
     try {
       copyFileSync(sourcePath, destPath)
       // 커스텀 프로토콜 사용 (file:// 대신)
-      return `app-background://${destPath}`
+      const urlPath = destPath.split('\\').join('/')
+      return `app-background:///${urlPath}`
     } catch (error) {
       console.error('이미지 복사 실패:', error)
       return null
@@ -330,8 +335,17 @@ app.whenReady().then(() => {
 
   ipcMain.handle('image:delete', (_, imagePath: string) => {
     try {
-      // 프로토콜 제거 (file:// 또는 app-background://)
-      const filePath = imagePath.replace('file://', '').replace('app-background://', '')
+      // 프로토콜 URL에서 파일 경로 추출
+      let filePath: string
+      if (imagePath.startsWith('app-background://')) {
+        const url = new URL(imagePath)
+        filePath = decodeURIComponent(url.pathname)
+        if (process.platform === 'win32' && filePath.startsWith('/')) {
+          filePath = filePath.slice(1)
+        }
+      } else {
+        filePath = imagePath.replace('file://', '')
+      }
       if (existsSync(filePath) && filePath.startsWith(imagesDir)) {
         unlinkSync(filePath)
         return true
